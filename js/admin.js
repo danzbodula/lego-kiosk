@@ -74,6 +74,19 @@ var Admin = (function () {
   }
   function txt(e, s) { e.appendChild(document.createTextNode(s)); return e; }
 
+  /* Tap.bind takes a handler MAP, not a bare function - see js/fastclick.js.
+     Passing a function silently binds nothing, which is exactly how every
+     control in this panel came to do nothing at all.  Going through one
+     helper means that cannot happen a second time, and it gets every control
+     the same pressed feedback for free.  release always fires before tap. */
+  function tapBind(node, fn) {
+    Tap.bind(node, {
+      press:   function () { Anim.addClass(node, 'is-pressed'); },
+      release: function () { Anim.removeClass(node, 'is-pressed'); },
+      tap:     fn
+    });
+  }
+
   /* A button whose colour states are stacked layers, because background-color
      cannot be animated on this device - the same trick the rest of the app
      uses for its pressed shades. */
@@ -88,7 +101,7 @@ var Admin = (function () {
       row.appendChild(s);
       row.__sub = s;
     }
-    Tap.bind(row, onTap);
+    tapBind(row, onTap);
     return row;
   }
 
@@ -117,7 +130,7 @@ var Admin = (function () {
     bar.appendChild(title);
     var done = el('div', 'ad-done');
     txt(done, 'DONE');
-    Tap.bind(done, hide);
+    tapBind(done, hide);
     bar.appendChild(done);
     host.appendChild(bar);
 
@@ -144,7 +157,7 @@ var Admin = (function () {
 
     var all = el('div', 'ad-refill-all');
     txt(all, 'REFILL ALL MAGAZINES');
-    Tap.bind(all, function () {
+    tapBind(all, function () {
       var k;
       for (k = 0; k < MAGS.length; k++) setCount(MAGS[k].key, capacity());
     });
@@ -170,7 +183,7 @@ var Admin = (function () {
     /* --- reset --- */
     var reset = el('div', 'ad-reset');
     txt(reset, 'RESET SESSION');
-    Tap.bind(reset, function () { hide(); App.fullReset(); });
+    tapBind(reset, function () { hide(); App.fullReset(); });
     body.appendChild(reset);
 
     nodes.foot = el('div', 'ad-foot');
@@ -201,7 +214,7 @@ var Admin = (function () {
 
     var btn = el('div', 'ad-refill');
     txt(btn, 'REFILL');
-    Tap.bind(btn, function () { setCount(mag.key, capacity()); });
+    tapBind(btn, function () { setCount(mag.key, capacity()); });
     row.appendChild(btn);
 
     nodes.mag[mag.key] = { row: row, count: count };
@@ -271,9 +284,17 @@ var Admin = (function () {
         txt(t1, 'BACK SHORTLY');
         var t2 = el('div', 'ad-pause-sub');
         txt(t2, 'THIS DEMO IS PAUSED');
+        /* The way back in.  The pause overlay covers the select screen's logo,
+           so without this the only route to the panel is a gesture on a badge
+           that gives no sign it is tappable - which is how a salesman ends up
+           stuck on this screen in front of a visitor.  It reads as reassurance
+           to anyone else. */
+        var t3 = el('div', 'ad-pause-hint');
+        txt(t3, 'STAFF: HOLD THE BADGE TO RESUME');
         pauseEl.appendChild(logo);
         pauseEl.appendChild(t1);
         pauseEl.appendChild(t2);
+        pauseEl.appendChild(t3);
         document.body.appendChild(pauseEl);
       }
       Anim.addClass(pauseEl, 'is-on');

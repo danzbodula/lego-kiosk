@@ -651,3 +651,28 @@
   letter-spacing: 2px;
   color: #8E8E93;
 }
+
+/* Pressed feedback for every staff-panel control.  Opacity only - the one
+   property besides transform that may be animated on this device. */
+.ad-done.is-pressed,
+.ad-row.is-pressed,
+.ad-refill.is-pressed,
+.ad-refill-all.is-pressed,
+.ad-reset.is-pressed {
+  opacity: 0.45;
+}
+
+.ad-done, .ad-row, .ad-refill, .ad-refill-all, .ad-reset {
+  -webkit-transition: opacity 90ms linear;
+  transition: opacity 90ms linear;
+}
+
+.ad-pause-hint {
+  position: absolute;
+  top: 900px;
+  left: 0; right: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  color: #C7C7CC;
+}
