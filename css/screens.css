@@ -1,0 +1,517 @@
+/* ---------------------------------------------------------------------------
+ * screens.css - per-screen layout.
+ *
+ * SCREEN 1 vertical budget (portrait, 768 x 1004, nothing scrolls):
+ *
+ *   top padding      28
+ *   logo             64   (was 44 - the lockup read as an afterthought)
+ *   gap              24
+ *   stepper          56
+ *   gap              28
+ *   headline         140
+ *   gap              24
+ *   hair grid        480   (4 rows x 108 + 3 x 16 gutter)
+ *   spacer           >=16  flexes
+ *   button           76
+ *   gap              14
+ *   helper           20
+ *   bottom padding   28
+ *                   ----
+ *                    998 fixed  (spacer takes the remaining 22)
+ *
+ * The spec's table totals 980 against a 1004 viewport (and its 482 grid is
+ * 2px more than 4x108+3x16 = 480).  Rather than silently pad one gap, the
+ * leftover lives in .s1-spacer, which also absorbs the difference between
+ * 1004 (Home Screen, standalone) and 1024 (in-browser).  Everything else is
+ * exactly the specified height.
+ * ------------------------------------------------------------------------ */
+
+.s1-col {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 28px 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
+/* Fixed-height children must not be shrunk by flex; Safari 9 needs the prefix. */
+.s1-col > * {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+
+.s1-col .s1-logo   { margin-bottom: 24px; }
+.s1-col .stepper   { margin-bottom: 28px; }
+.s1-col .headline  { margin-bottom: 24px; }
+.s1-col .btn-wrap  { margin-bottom: 14px; }
+
+.s1-spacer {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-height: 16px;
+}
+
+/* --- attract / idle overlay -------------------------------------------- */
+/* Deliberately cheap: it runs for hours.  Two composited layers maximum -
+   the turntable stage and the pulsing wordmark. */
+.attract {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* Opaque. The brief called for dimming the UI to 55% behind a translucent
+     attract state, but with a full grid behind it the dimmed logo ghosts a
+     second copy right next to the attract logo, which reads as a rendering
+     bug. #app is still dimmed underneath - this is just a clean ground. */
+  background: #FAFAFA;
+  z-index: 500;
+  visibility: hidden;
+  opacity: 0;
+  text-align: center;
+}
+
+.attract-logo {
+  position: absolute;
+  top: 150px;
+  left: 332px;
+  width: 104px;
+  height: 104px;
+  background-image: url(../assets/logo/dpt-badge.svg);
+  background-size: 104px 104px;
+  background-repeat: no-repeat;
+}
+
+.attract-stage {
+  position: absolute;
+  top: 310px;
+  left: 234px;
+  width: 300px;
+  height: 300px;
+}
+
+.attract-title {
+  position: absolute;
+  top: 666px;
+  left: 0;
+  right: 0;
+  font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
+               "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #7E001B;
+}
+
+.attract-sub {
+  position: absolute;
+  top: 714px;
+  left: 0;
+  right: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #48484A;
+}
+
+.attract-tap {
+  position: absolute;
+  top: 838px;
+  left: 0;
+  right: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #1C1C1E;
+}
+
+/* --- turntable stage --------------------------------------------------- */
+/* One element showing one cell of one sprite sheet.  Every host is square, so
+   the per-cent background-size in Anim.Turntable keeps cells undistorted. */
+.spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.spin-strip {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-repeat: no-repeat;
+  /* background-image, -size and -position are written inline per frame */
+}
+
+/* --- debug panel ------------------------------------------------------- */
+.debug {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  z-index: 99998;
+  display: none;
+  padding: 10px 12px;
+  background: rgba(28, 28, 30, 0.94);
+  color: #FFFFFF;
+  font-family: Menlo, Monaco, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.debug.is-open { display: block; }
+.debug-ok   { color: #34A853; }
+.debug-bad  { color: #FF6B6B; }
+.debug-hint { color: #8E8E93; }
+
+/* ---------------------------------------------------------------------------
+ * SCREEN 1, LAYOUT OPTION B  (DPT_CONFIG.LAYOUT === 'B')
+ *
+ * Hero turntable + a swipeable row of circular chips.  More dramatic, less
+ * scannable - built so the two can be compared on the real device.
+ *
+ *   top 28 / logo 44 / 24 / stepper 56 / 28 / headline 140 / 24
+ *   hero 330 / 12 / name 30 / 18 / chips 108 / spacer >=16
+ *   button 76 / 14 / helper 20 / bottom 28          = 996 fixed
+ * ------------------------------------------------------------------------ */
+
+.s1b-col {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 28px 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
+.s1b-col > * {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+
+.s1b-col .s1-logo  { margin-bottom: 24px; }
+.s1b-col .stepper  { margin-bottom: 28px; }
+.s1b-col .headline { margin-bottom: 24px; }
+.s1b-col .btn-wrap { margin-bottom: 14px; }
+
+.hero {
+  position: relative;
+  width: 330px;
+  height: 330px;
+  margin: 0 auto 12px auto;
+}
+
+.hero-name {
+  height: 30px;
+  line-height: 30px;
+  margin-bottom: 18px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1C1C1E;
+}
+
+/* The document blocks touchmove, so this row is dragged by JS translating the
+   track - no native scrolling, and no -webkit-overflow-scrolling on iOS 9. */
+.chips-viewport {
+  position: relative;
+  width: 672px;
+  height: 108px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.chips-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 108px;
+  font-size: 0;
+  white-space: nowrap;
+}
+
+.chip {
+  position: relative;
+  display: inline-block;
+  width: 88px;
+  height: 108px;
+  margin-right: 16px;
+  vertical-align: top;
+  text-align: center;
+}
+
+.chip:last-child { margin-right: 0; }
+
+.chip-disc {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 44px;
+  background: #FFFFFF;
+  border: 1px solid #E5E5EA;
+  overflow: hidden;
+}
+
+.chip-img {
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}
+
+/* stacked ring + wash so nothing but opacity animates */
+.chip-wash {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #F6EDEF;
+  border-radius: 44px;
+  opacity: 0;
+}
+
+.chip-ring {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 2px solid #7E001B;
+  border-radius: 44px;
+  opacity: 0;
+}
+
+.chip-label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #8E8E93;
+}
+
+.chip.is-selected .chip-label { color: #7E001B; }
+
+/* .s1b-col > * (flex: 0 0 auto) is declared after .s1-spacer and has equal
+   specificity, so the spacer needs its flex restored explicitly here. */
+.s1b-col .s1-spacer,
+.s1-col .s1-spacer {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * SCREEN 2 - build / progress
+ *
+ *   top 28 / logo 44 / 24 / stepper 56 / 28 / headline 140 / 24
+ *   stage 420 / 20 / label 32 / 10 / percent 44 / spacer
+ *   note 20 / bottom 28
+ * ------------------------------------------------------------------------ */
+
+.s2-col, .s3-col {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 28px 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
+.s2-col > *, .s3-col > * {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+
+.s2-col .s1-badge, .s3-col .s1-badge { margin-bottom: 20px; }
+.s2-col .stepper, .s3-col .stepper   { margin-bottom: 28px; }
+.s2-col .headline, .s3-col .headline { margin-bottom: 24px; }
+
+.s2-col .s1-spacer, .s3-col .s1-spacer {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-height: 16px;
+}
+
+.build-stage {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  margin: 0 auto 20px auto;
+}
+
+.badge-timer { display: block; }
+
+/* inside the badge the track and fill are white, not the page's burgundy */
+.badge-timer .ring-track { stroke: rgba(255, 255, 255, 0.20); }
+.badge-timer .ring-fill  { stroke: #FFFFFF; }
+
+/* the arm keeps its slow idle bob so the screen never looks frozen */
+.badge-arm {
+  -webkit-animation: armBob 3s ease-in-out infinite;
+  animation: armBob 3s ease-in-out infinite;
+}
+
+.stage-label {
+  position: relative;
+  height: 32px;
+  margin-bottom: 10px;
+}
+
+/* two stacked lines cross-fading, so nothing but opacity/transform moves */
+.stage-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #1C1C1E;
+  opacity: 0;
+}
+
+.build-pct {
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #7E001B;
+}
+
+.build-note {
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 15px;
+  color: #8E8E93;
+}
+
+/* recoverable error state - a full screen, not a bare overlay, so a stalled
+   booth still looks deliberate to a passer-by */
+.build-error {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 28px 0;
+  background: #FAFAFA;
+  opacity: 0;
+  visibility: hidden;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  text-align: center;
+}
+
+.build-error > * {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+
+.build-error .s1-spacer {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-height: 16px;
+}
+
+.build-error.is-on { opacity: 1; visibility: visible; }
+
+.err-mark {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 28px auto;
+  border-radius: 48px;
+  background: #F6EDEF;
+}
+
+.err-mark svg { margin: 26px 0 0 36px; }
+
+.err-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #7E001B;
+}
+
+.err-msg {
+  margin-top: 14px;
+  padding: 0 74px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #48484A;
+}
+
+/* ---------------------------------------------------------------------------
+ * SCREEN 3 - completion
+ * ------------------------------------------------------------------------ */
+
+.done-stage {
+  position: relative;
+  width: 420px;
+  height: 430px;
+  margin: 0 auto 14px auto;
+}
+
+.done-figure {
+  position: absolute;
+  top: 18px;
+  left: 6px;
+  width: 344px;
+  height: 344px;
+  opacity: 0;
+  -webkit-transform: scale(0.82);
+  transform: scale(0.82);
+}
+
+.done-figure.is-in {
+  opacity: 1;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+
+/* beside the figure, not over it - a transparent minifigure PNG must not be
+   covered by the badge */
+.done-badge {
+  position: absolute;
+  top: 52px;
+  left: 322px;
+  width: 92px;
+  height: 92px;
+}
+
+.done-badge-disc {
+  position: absolute;
+  top: 0; left: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 46px;
+  background: #7E001B;
+}
+
+/* one expanding ring pulse behind the tick - no particle systems */
+.done-pulse {
+  position: absolute;
+  top: 0; left: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 46px;
+  border: 3px solid #7E001B;
+  opacity: 0;
+}
+
+.done-name {
+  height: 34px;
+  line-height: 34px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1C1C1E;
+}
+
+.done-sub {
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 16px;
+  color: #48484A;
+}
+
+.s3-col .btn-wrap { margin-bottom: 14px; }

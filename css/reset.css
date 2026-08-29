@@ -1,0 +1,52 @@
+/* ---------------------------------------------------------------------------
+ * reset.css - minimal reset, tuned for a locked-down iOS 9 kiosk.
+ * ------------------------------------------------------------------------ */
+
+html, body, div, span, h1, h2, h3, p, button, svg, section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;          /* stop iOS inflating type on rotate */
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background: #FAFAFA;
+  color: #1C1C1E;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.3;
+
+  /* Kiosk hygiene: nothing here should feel like a web page. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* no grey flash on tap */
+  -webkit-touch-callout: none;              /* no long-press share sheet */
+  overflow: hidden;                         /* nothing scrolls, ever */
+  position: fixed;                          /* belt and braces against rubber-band */
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  background: none;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+svg { display: block; }
+
+/* Border-box everywhere: card borders must not grow the 326x108 footprint. */
+*, *:before, *:after {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}

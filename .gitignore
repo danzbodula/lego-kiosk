@@ -1,0 +1,17 @@
+# Local pre-redesign backups.  Git supersedes these - keeping them would double
+# the repo for no benefit.  They are still on the working machine.
+_backup-*/
+_backup-*.tar.gz
+
+# Windows "downloaded from the internet" markers, one per source photo
+*.Identifier
+*:Zone.Identifier
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc

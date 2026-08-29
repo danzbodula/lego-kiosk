@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>
+window.onerror = function (msg, url, line, col) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7E001B;' +
+      'color:#fff;font:12px monospace;padding:10px;white-space:pre-wrap;';
+    d.appendChild(document.createTextNode(msg + '\n' + url + ':' + line + ':' + col));
+    if (document.body) document.body.appendChild(d);
+  } catch (e) {}
+  return false;
+};
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>DPT Kiosk — motion smoke test</title>
+
+<!-- the real stylesheets: this page must exercise the shipping rules, not a copy -->
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/screens.css">
+<link rel="stylesheet" href="css/animations.css">
+
+<style>
+/* test-harness chrome only - none of this ships */
+body { overflow-y: auto; position: static; height: auto; background: #FFFFFF; }
+.t-head { padding: 14px 16px; background: #1C1C1E; color: #FFFFFF; }
+.t-head h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.5px; }
+.t-fps { margin-top: 4px; font-family: Menlo, Monaco, monospace; font-size: 12px; color: #8E8E93; }
+.t-row { border-bottom: 1px solid #E5E5EA; padding: 14px 16px; }
+.t-name { font-size: 15px; font-weight: 600; color: #1C1C1E; }
+.t-note { margin-top: 2px; font-size: 13px; color: #8E8E93; }
+.t-res  { margin-top: 6px; font-family: Menlo, Monaco, monospace; font-size: 12px; color: #48484A; }
+.t-res.bad { color: #7E001B; font-weight: 700; }
+.t-stage { position: relative; margin-top: 10px; min-height: 8px; }
+.t-run {
+  display: inline-block; margin-top: 8px; padding: 0 18px; height: 40px; line-height: 40px;
+  background: #7E001B; color: #FFFFFF; border-radius: 10px; font-size: 14px;
+  font-weight: 600; letter-spacing: 0.5px;
+}
+.t-runall { background: #1C1C1E; }
+.t-screen { position: relative; width: 300px; height: 150px; overflow: hidden; border: 1px solid #E5E5EA; border-radius: 8px; }
+.t-screen .screen { background: #F6EDEF; }
+.t-screen .screen.b { background: #E9F0F6; }
+.t-screen .screen span { display: block; padding: 60px 0 0 0; text-align: center; font-weight: 700; color: #1C1C1E; }
+.t-swatch { width: 62px; height: 62px; border-radius: 12px; background: #7E001B; }
+.t-spin { width: 150px; height: 150px; }
+.t-ring { width: 150px; height: 150px; }
+</style>
+</head>
+<body>
+
+<div class="t-head">
+  <h1>DPT KIOSK — MOTION SMOKE TEST</h1>
+  <div class="t-fps" id="fps">fps —  ·  <span id="env"></span></div>
+  <span class="t-run t-runall" id="run-all">RUN ALL</span>
+</div>
+
+<div id="tests"></div>
+
+<script src="js/config.js"></script>
+<script src="data/hair.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/fastclick.js"></script>
+<script src="js/debug.js"></script>
+<script src="js/anim.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+ * test.html - exercises every animation, easing curve and screen transition in
+ * isolation with an FPS readout on each, so it is possible to find which
+ * specific effect an A5 cannot hold without stepping through the whole flow.
+ *
+ * Targets: 60fps for card selection and page transitions, 30fps floor for the
+ * attract loop.  A row turns burgundy when its measured minimum falls below
+ * its stated target.
+ * ------------------------------------------------------------------------ */
+(function () {
+  var host = document.getElementById('tests');
+  var fpsEl = document.getElementById('fps');
+  var rows = [];
+
+  document.getElementById('env').appendChild(document.createTextNode(
+    window.innerWidth + 'x' + window.innerHeight + ' dpr' + (window.devicePixelRatio || 1)));
+
+  /* rolling fps in the header */
+  var f = 0, last = 0;
+  function loop(t) {
+    f++;
+    if (!last) last = t;
+    if (t - last >= 500) {
+      var v = Math.round(f * 1000 / (t - last));
+      fpsEl.firstChild.nodeValue = 'fps ' + v + '  ·  ';
+      f = 0; last = t;
+    }
+    window.requestAnimationFrame(loop);
+  }
+  if (window.requestAnimationFrame) window.requestAnimationFrame(loop);
+
+  /* measure avg + worst fps across a window */
+  function measure(ms, done) {
+    if (!window.requestAnimationFrame) { done(0, 0); return; }
+    var frames = 0, start = null, sampleAt = null, sampleFrames = 0, worst = 9999;
+    function tick(t) {
+      if (start === null) { start = t; sampleAt = t; }
+      frames++; sampleFrames++;
+      if (t - sampleAt >= 200) {
+        var s = sampleFrames * 1000 / (t - sampleAt);
+        if (s < worst) worst = s;
+        sampleFrames = 0; sampleAt = t;
+      }
+      if (t - start < ms) window.requestAnimationFrame(tick);
+      else done(Math.round(frames * 1000 / (t - start)), Math.round(worst === 9999 ? 0 : worst));
+    }
+    window.requestAnimationFrame(tick);
+  }
+
+  /* name, note, target fps, duration, build(stage) -> run() */
+  function test(name, note, target, ms, build) {
+    var row = document.createElement('div');
+    row.className = 't-row';
+    var n = document.createElement('div'); n.className = 't-name';
+    n.appendChild(document.createTextNode(name));
+    var d = document.createElement('div'); d.className = 't-note';
+    d.appendChild(document.createTextNode(note));
+    var stage = document.createElement('div'); stage.className = 't-stage';
+    var res = document.createElement('div'); res.className = 't-res';
+    res.appendChild(document.createTextNode('not run'));
+    var btn = document.createElement('span'); btn.className = 't-run';
+    btn.appendChild(document.createTextNode('RUN'));
+
+    row.appendChild(n); row.appendChild(d); row.appendChild(stage);
+    row.appendChild(res); row.appendChild(btn);
+    host.appendChild(row);
+
+    var run = build(stage);
+    function go(cb) {
+      res.className = 't-res';
+      res.firstChild.nodeValue = 'running…';
+      run();
+      measure(ms, function (avg, worst) {
+        res.firstChild.nodeValue = 'avg ' + avg + ' fps · worst ' + worst +
+                                   ' fps · target ' + target;
+        if (worst && worst < target) res.className = 't-res bad';
+        if (cb) cb();
+      });
+    }
+    Tap.bind(btn, { tap: function () { go(); } });
+    rows.push(go);
+  }
+
+  function box(stage, cls) {
+    var e = document.createElement('div');
+    e.className = cls;
+    stage.appendChild(e);
+    return e;
+  }
+
+  /* --- 1. the three easing curves ------------------------------------- */
+  function easingTest(label, css, target) {
+    test('Easing — ' + label, css, target, 900, function (stage) {
+      var s = box(stage, 't-swatch');
+      s.style.webkitTransition = '-webkit-transform ' + css;
+      s.style.transition = 'transform ' + css;
+      var on = false;
+      return function () {
+        on = !on;
+        var v = on ? 'translate3d(220px,0,0)' : 'translate3d(0,0,0)';
+        s.style.webkitTransform = v; s.style.transform = v;
+      };
+    });
+  }
+  easingTest('standard',  '300ms cubic-bezier(0.4, 0.0, 0.2, 1)', 60);
+  easingTest('overshoot', '420ms cubic-bezier(0.34, 1.36, 0.64, 1)', 60);
+  easingTest('sharp',     '200ms cubic-bezier(0.4, 0.0, 1, 1)', 60);
+
+  /* --- 2. entrance stagger --------------------------------------------- */
+  test('App entrance — staggered rise', 'eight cards, 40ms apart, 16px rise', 60, 1400, function (stage) {
+    var wrap = document.createElement('div');
+    wrap.className = 'hair-grid';
+    wrap.style.width = '672px';
+    var slots = [], i;
+    for (i = 0; i < 8; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'card-slot enter-init';
+      slot.innerHTML = '<div class="card"><div class="card-wash"></div>' +
+        '<div class="card-name">STYLE ' + (i + 1) + '</div><div class="card-ring"></div></div>';
+      wrap.appendChild(slot);
+      slots.push(slot);
+    }
+    stage.appendChild(wrap);
+    return function () {
+      var items = [], j;
+      for (j = 0; j < slots.length; j++) {
+        Anim.removeClass(slots[j], 'enter-run');
+        Anim.addClass(slots[j], 'enter-init');
+        items.push({ el: slots[j], delay: j * 40 });
+      }
+      window.setTimeout(function () { Anim.enter(items); }, 20);
+    };
+  });
+
+  /* --- 3. card press ---------------------------------------------------- */
+  test('Card press', '0.97 in 90ms, spring back on the overshoot curve', 60, 900, function (stage) {
+    var slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.innerHTML = '<div class="card"><div class="card-wash"></div>' +
+      '<div class="card-name">PRESS ME</div><div class="card-ring"></div></div>';
+    stage.appendChild(slot);
+    var card = slot.querySelector('.card');
+    return function () {
+      Anim.promote(slot);
+      Anim.addClass(card, 'is-pressed');
+      window.setTimeout(function () {
+        Anim.removeClass(card, 'is-pressed');
+        Anim.unpromoteAfter(slot, 460);
+      }, 160);
+    };
+  });
+
+  /* --- 4. selection transfer -------------------------------------------- */
+  test('Selection transfer', 'old ring/check out 180ms while new springs in 320ms', 60, 1200, function (stage) {
+    var wrap = document.createElement('div');
+    wrap.className = 'hair-grid';
+    wrap.style.width = '672px';
+    var slots = [], i;
+    for (i = 0; i < 2; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'card-slot';
+      slot.innerHTML = '<div class="card"><div class="card-wash"></div>' +
+        '<div class="card-name">CARD ' + (i + 1) + '</div>' +
+        '<div class="card-check"><svg width="16" height="16" viewBox="0 0 16 16">' +
+        '<path d="M3 8.4l3.2 3.2L13 4.9" fill="none" stroke="#FFF" stroke-width="2.2" ' +
+        'stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+        '<div class="card-ring"></div></div>';
+      wrap.appendChild(slot);
+      slots.push(slot);
+    }
+    stage.appendChild(wrap);
+    var which = 0;
+    Anim.addClass(slots[0].querySelector('.card'), 'is-selected');
+    return function () {
+      Anim.removeClass(slots[which].querySelector('.card'), 'is-selected');
+      which = 1 - which;
+      Anim.addClass(slots[which].querySelector('.card'), 'is-selected');
+    };
+  });
+
+  /* --- 5. turntable ----------------------------------------------------- */
+  test('Turntable cross-fade', 'four frames, opacity only — the signature effect', 60, 2600, function (stage) {
+    var host2 = document.createElement('div');
+    host2.className = 't-spin';
+    stage.appendChild(host2);
+    var tt = Anim.Turntable(host2);
+    tt.setStyle(HAIR_STYLES[0]);
+    return function () {
+      tt.stop();
+      tt.setStyle(HAIR_STYLES[Math.floor(Math.random() * HAIR_STYLES.length)]);
+      tt.start();
+      window.setTimeout(function () { tt.stop(); }, 2400);
+    };
+  });
+
+  /* --- 6. screen transitions -------------------------------------------- */
+  test('Screen push (forward)', 'out to -25% @0.6 opacity, in from 100%, 380ms', 60, 1000, function (stage) {
+    var s = document.createElement('div');
+    s.className = 't-screen';
+    s.innerHTML = '<div class="screen screen-active" id="ts-a"><span>SCREEN A</span></div>' +
+                  '<div class="screen b" id="ts-b"><span>SCREEN B</span></div>';
+    stage.appendChild(s);
+    var a = s.querySelector('#ts-a'), b = s.querySelector('#ts-b'), fwd = true;
+    return function () {
+      if (fwd) Anim.push(a, b); else Anim.pop(b, a);
+      fwd = !fwd;
+    };
+  });
+
+  test('Screen pop (back)', 'reverses the push', 60, 1000, function (stage) {
+    var s = document.createElement('div');
+    s.className = 't-screen';
+    s.innerHTML = '<div class="screen" id="ts-c"><span>SCREEN A</span></div>' +
+                  '<div class="screen b screen-active" id="ts-d"><span>SCREEN B</span></div>';
+    stage.appendChild(s);
+    var c = s.querySelector('#ts-c'), d = s.querySelector('#ts-d'), back = true;
+    return function () {
+      if (back) Anim.pop(d, c); else Anim.push(c, d);
+      back = !back;
+    };
+  });
+
+  /* --- 7. progress ring + stage label + arm bob -------------------------- */
+  test('Progress ring', 'SVG stroke-dashoffset, 320ms per step', 60, 2200, function (stage) {
+    var R = 66, C = 2 * Math.PI * R;
+    var d = document.createElement('div');
+    d.className = 't-ring';
+    d.innerHTML = '<svg width="150" height="150" viewBox="0 0 150 150">' +
+      '<g transform="rotate(-90 75 75)" fill="none" stroke-width="8" stroke-linecap="round">' +
+      '<circle class="ring-track" cx="75" cy="75" r="' + R + '"/>' +
+      '<circle class="ring-fill" cx="75" cy="75" r="' + R + '" stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '"/>' +
+      '</g></svg>';
+    stage.appendChild(d);
+    var fill = d.querySelector('.ring-fill'), p = 0;
+    return function () {
+      p = 0;
+      fill.setAttribute('stroke-dashoffset', String(C));
+      var iv = window.setInterval(function () {
+        p += 12;
+        if (p > 100) { window.clearInterval(iv); return; }
+        fill.setAttribute('stroke-dashoffset', String(C * (1 - p / 100)));
+      }, 220);
+    };
+  });
+
+  test('Stage label cross-fade', 'rise 12px + fade between build stages', 60, 1200, function (stage) {
+    var d = document.createElement('div');
+    d.className = 'stage-label';
+    d.innerHTML = '<div class="stage-line"></div><div class="stage-line"></div>';
+    stage.appendChild(d);
+    var lines = d.querySelectorAll('.stage-line');
+    var texts = ['Preparing components', 'Installing hair', 'Finalizing build'];
+    var i = 0, top = 0;
+    lines[0].appendChild(document.createTextNode(texts[0]));
+    Anim.addClass(lines[0], 'is-on');
+    return function () {
+      i = (i + 1) % texts.length;
+      var incoming = lines[1 - top], outgoing = lines[top];
+      incoming.innerHTML = '';
+      incoming.appendChild(document.createTextNode(texts[i]));
+      Anim.removeClass(incoming, 'is-out');
+      Anim.reflow(incoming);
+      Anim.addClass(incoming, 'is-on');
+      Anim.removeClass(outgoing, 'is-on');
+      Anim.addClass(outgoing, 'is-out');
+      top = 1 - top;
+    };
+  });
+
+  test('Arm idle bob', '3px, 3s loop — must never look frozen', 30, 3200, function (stage) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:relative;width:150px;height:150px;';
+    var inner = document.createElement('div');
+    inner.className = 'arm-wrap';
+    inner.style.cssText = 'position:absolute;top:0;left:0;width:150px;height:150px;';
+    inner.innerHTML = '<svg width="150" height="150" viewBox="0 0 240 240">' +
+      '<rect x="62" y="206" width="116" height="18" rx="9" fill="#1C1C1E"/>' +
+      '<path d="M120 196V112" stroke="#1C1C1E" stroke-width="26" stroke-linecap="round" fill="none"/>' +
+      '<path d="M120 112L186 78" stroke="#1C1C1E" stroke-width="22" stroke-linecap="round" fill="none"/>' +
+      '<circle cx="120" cy="112" r="16" fill="#7E001B"/></svg>';
+    d.appendChild(inner);
+    stage.appendChild(d);
+    return function () {};   // the bob is a CSS loop; just sample it
+  });
+
+  /* --- 8. completion ---------------------------------------------------- */
+  test('Completion sequence', 'tick draws 500ms → one ring pulse → figure springs in', 60, 1800, function (stage) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:relative;width:240px;height:160px;';
+    d.innerHTML =
+      '<div class="done-figure" style="position:absolute;top:10px;left:0;width:130px;height:130px;' +
+      'background:#F6EDEF;border-radius:12px;"></div>' +
+      '<div class="done-badge" style="position:absolute;top:36px;left:150px;">' +
+      '<div class="done-pulse"></div><div class="done-badge-disc">' +
+      '<svg width="84" height="84" viewBox="0 0 84 84"><path class="done-tick-path" ' +
+      'd="M24 43.5l12 12 24-26" fill="none" stroke="#FFF" stroke-width="7" stroke-linecap="round" ' +
+      'stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="60"/></svg></div></div>';
+    stage.appendChild(d);
+    var tick = d.querySelector('.done-tick-path');
+    var pulse = d.querySelector('.done-pulse');
+    var fig = d.querySelector('.done-figure');
+    return function () {
+      tick.setAttribute('stroke-dashoffset', '60');
+      Anim.removeClass(pulse, 'is-pulsing');
+      Anim.removeClass(fig, 'is-in');
+      Anim.reflow(tick);
+      window.setTimeout(function () { tick.setAttribute('stroke-dashoffset', '0'); }, 100);
+      window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 620);
+      window.setTimeout(function () { Anim.addClass(fig, 'is-in'); }, 760);
+    };
+  });
+
+  /* --- 9. attract pulse -------------------------------------------------- */
+  test('Attract pulse', 'opacity 0.6↔1.0, 2.4s, infinite — 30fps floor', 30, 3000, function (stage) {
+    var d = document.createElement('div');
+    d.className = 'attract is-on';
+    d.style.cssText = 'position:relative;height:70px;background:transparent;visibility:visible;opacity:1;';
+    d.innerHTML = '<div class="attract-tap" style="position:relative;top:20px;">TAP TO START</div>';
+    stage.appendChild(d);
+    return function () {};
+  });
+
+  /* --- run all ---------------------------------------------------------- */
+  Tap.bind(document.getElementById('run-all'), {
+    tap: function () {
+      var i = 0;
+      (function next() {
+        if (i >= rows.length) return;
+        var go = rows[i++];
+        go(function () { window.setTimeout(next, 220); });
+      })();
+    }
+  });
+})();
+</script>
+</body>
+</html>

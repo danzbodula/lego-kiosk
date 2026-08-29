@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<!-- ===================================================================
+     GLOBAL ERROR OVERLAY - must stay the first script on the page.
+     Safari 9 fails silently on unsupported syntax and there is no way to
+     attach Web Inspector to iOS 9 from a modern Mac, so the app reports its
+     own failures on screen instead.  Do not move this below the stylesheets.
+     =================================================================== -->
+<script>
+window.onerror = function (msg, url, line, col) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7E001B;' +
+      'color:#fff;font:12px monospace;padding:10px;white-space:pre-wrap;';
+    d.appendChild(document.createTextNode(msg + '\n' + url + ':' + line + ':' + col));
+    if (document.body) {
+      document.body.appendChild(d);
+    } else {
+      // body does not exist yet - stash it and attach as soon as it does
+      if (window.addEventListener) {
+        window.addEventListener('DOMContentLoaded', function () { document.body.appendChild(d); }, false);
+      }
+    }
+  } catch (e) { /* last resort: never let the handler itself throw */ }
+  return false;
+};
+</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>Build Your Minifigure — Diversified Printing Techniques</title>
+
+<!-- Home Screen icon + launch image. Without these iOS uses a blurry
+     screenshot of the page as the icon and flashes white on launch. -->
+<link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png">
+<link rel="apple-touch-startup-image" href="assets/logo/launch-768x1004.png">
+
+<link rel="stylesheet" href="css/reset.css?v=1788030726">
+<link rel="stylesheet" href="css/tokens.css?v=1788030726">
+<link rel="stylesheet" href="css/components.css?v=1788030726">
+<link rel="stylesheet" href="css/screens.css?v=1788030726">
+<link rel="stylesheet" href="css/animations.css?v=1788030726">
+</head>
+
+<body>
+
+<div id="app">
+
+  <!-- ============================ SCREEN 1 ============================ -->
+  <div class="screen screen-active" id="screen-select">
+    <div class="s1-col">
+
+      <div class="s1-logo enter-init-logo" id="logo-select"></div>
+
+      <div class="stepper enter-init" id="stepper-select">
+        <div class="step step-active">
+          <div class="step-dot"><span class="step-num">1</span></div>
+          <div class="step-label">CHOOSE</div>
+        </div>
+        <div class="step-bar"></div>
+        <div class="step">
+          <div class="step-dot"><span class="step-num">2</span></div>
+          <div class="step-label">BUILD</div>
+        </div>
+        <div class="step-bar"></div>
+        <div class="step">
+          <div class="step-dot"><span class="step-num">3</span></div>
+          <div class="step-label">COLLECT</div>
+        </div>
+      </div>
+
+      <div class="headline enter-init" id="headline-select">
+        <div class="h-small">BUILD YOUR</div>
+        <div class="h-big">MINIFIGURE</div>
+        <div class="h-rule">
+          <span class="rule-line"></span>
+          <span class="rule-text">CHOOSE YOUR HAIR</span>
+        </div>
+      </div>
+
+      <!-- cards are built from HAIR_STYLES; nothing here names a style -->
+      <div class="hair-grid" id="hair-grid"></div>
+
+      <!-- Absorbs the difference between the spec's 980px column and the
+           1004px (standalone) / 1024px (in-browser) viewport. -->
+      <div class="s1-spacer"></div>
+
+      <div class="btn-wrap enter-init" id="btn-wrap-select">
+        <button class="btn-primary" id="btn-continue" type="button">
+          <span class="btn-label">CONTINUE</span>
+          <span class="btn-chevron">
+            <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+              <path d="M7 4l7 7-7 7" fill="none" stroke="#FFFFFF" stroke-width="2.4"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="btn-press"></span>
+        </button>
+      </div>
+
+      <div class="helper enter-init" id="helper-select">
+        <span class="helper-icon">
+          <svg width="15" height="16" viewBox="0 0 15 16" aria-hidden="true">
+            <path d="M5.4 8.2V3.1a1.35 1.35 0 0 1 2.7 0v4.2m0 .6V6.4a1.2 1.2 0 0 1 2.4 0v1.9m0 .1V7.3a1.2 1.2 0 0 1 2.4 0v3.4c0 2.6-1.8 4.4-4.4 4.4-2.1 0-3.2-.7-4.2-2.2L2.2 10.4a1.25 1.25 0 0 1 2-1.5l1.2 1.4"
+                  fill="none" stroke="#48484A" stroke-width="1.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="helper-text">Tap a style to see it on your minifigure!</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ SCREEN 2 ============================ -->
+  <div class="screen" id="screen-build"></div>
+
+  <!-- ============================ SCREEN 3 ============================ -->
+  <div class="screen" id="screen-done"></div>
+
+</div>
+
+<!-- attract / idle loop -->
+<div id="attract" class="attract"></div>
+<div id="admin"></div>
+
+<!-- debug panel (only populated when DPT_CONFIG.DEBUG is true) -->
+<div id="debug" class="debug"></div>
+
+<script src="js/config.js?v=1788030726"></script>
+<script src="data/hair.js?v=1788030726"></script>
+<script src="js/assets.js?v=1788030726"></script>
+<script src="js/fastclick.js?v=1788030726"></script>
+<script src="js/debug.js?v=1788030726"></script>
+<script src="js/anim.js?v=1788030726"></script>
+<script src="js/screens.js?v=1788030726"></script>
+<script src="js/app.js?v=1788030726"></script>
+<script src="js/admin.js?v=1788030726"></script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- DPT registration badge, UI variant.
+       The master artwork draws the reticle in pure black on maroon, which at
+       44-80px reads as a muddy smudge. White holds the mark's shape at every
+       size and is what makes it sit naturally next to iOS chrome. -->
+  <rect x="0" y="0" width="120" height="120" rx="27" fill="#7E001B"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round">
+    <circle cx="60" cy="60" r="32"/>
+    <path d="M60 14v92M14 60h92"/>
+  </g>
+</svg>
