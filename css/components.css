@@ -407,7 +407,7 @@
 
 .ad-head {
   height: 18px;
-  margin-top: 22px;                 /* section rhythm; first one clears the bar */
+  margin-top: 12px;                 /* section rhythm; first one clears the bar */
   margin-bottom: 8px;
   padding-left: 4px;
   font-size: 11px;
@@ -514,7 +514,7 @@
 
 .ad-refill-all {
   height: 52px;
-  margin-top: 16px;
+  margin-top: 12px;
   line-height: 52px;
   text-align: center;
   border-radius: 14px;
@@ -593,7 +593,7 @@
 /* --- reset + footer --- */
 .ad-reset {
   height: 72px;
-  margin-top: 24px;
+  margin-top: 16px;
   line-height: 72px;
   text-align: center;
   border-radius: 16px;
@@ -605,8 +605,8 @@
 }
 
 .ad-foot {
-  height: 40px;
-  line-height: 40px;
+  height: 30px;
+  line-height: 30px;
   text-align: center;
   font-size: 11px;
   color: #8E8E93;
@@ -672,6 +672,55 @@
   top: 900px;
   left: 0; right: 0;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  color: #C7C7CC;
+}
+
+/* --- camera test ---------------------------------------------------------
+   Sits above the staff panel.  The frame is letterboxed with explicit width
+   and height rather than object-fit, which Safari 9 does not have. */
+.ad-cam {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #1C1C1E;
+  z-index: 950;
+  visibility: hidden;
+  opacity: 0;
+  -webkit-transition: opacity 220ms linear, visibility 0s linear 220ms;
+  transition: opacity 220ms linear, visibility 0s linear 220ms;
+}
+
+.ad-cam.is-on {
+  visibility: visible;
+  opacity: 1;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+
+.ad-cam-stage {
+  position: absolute;
+  top: 132px;
+  left: 24px;
+  width: 720px;
+  height: 540px;
+  background: #000000;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ad-cam-img {
+  display: block;
+  width: 720px;
+  height: 540px;
+}
+
+.ad-cam-status {
+  position: absolute;
+  top: 700px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 1.4px;
   color: #C7C7CC;

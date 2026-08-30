@@ -15,10 +15,64 @@ Binds 0.0.0.0 explicitly: the default picks IPv6 (`::`) on Windows, which the
 iPad cannot reach over IPv4.
 """
 import sys
+import os
+import subprocess
+import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+# --- camera -----------------------------------------------------------------
+# GET /camera.jpg grabs one frame from the Pi camera for the staff panel's
+# camera test.  A capture on a Pi Zero W takes roughly 2.5 seconds, so this is
+# a slideshow rather than a video feed - enough to check aim and focus, which
+# is all the test is for.
+#
+# The lock matters: the server is threaded, and two overlapping rpicam calls
+# both fail because the sensor can only be opened once.  Serialising them means
+# a second request simply waits its turn.
+CAM_LOCK = threading.Lock()
+CAM_FILE = "/tmp/dpt-cam.jpg"
+
+
+def capture():
+    """Return JPEG bytes, or None with a reason string on failure."""
+    for exe in ("rpicam-jpeg", "libcamera-jpeg", "rpicam-still", "libcamera-still"):
+        try:
+            r = subprocess.run(
+                [exe, "-o", CAM_FILE, "-t", "250", "-n",
+                 "--width", "640", "--height", "480"],
+                capture_output=True, timeout=20)
+        except FileNotFoundError:
+            continue
+        except subprocess.TimeoutExpired:
+            return None, "%s timed out" % exe
+        if r.returncode == 0 and os.path.exists(CAM_FILE):
+            with open(CAM_FILE, "rb") as fh:
+                return fh.read(), None
+        return None, (r.stderr or b"").decode("utf-8", "replace")[-300:] or "capture failed"
+    return None, "no rpicam/libcamera tool found on this Pi"
 
 
 class NoCacheHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path.split("?")[0] == "/camera.jpg":
+            with CAM_LOCK:
+                data, err = capture()
+            if data:
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+            else:
+                msg = ("camera error: " + (err or "unknown")).encode("utf-8", "replace")
+                self.send_response(503)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Content-Length", str(len(msg)))
+                self.end_headers()
+                self.wfile.write(msg)
+            return
+        SimpleHTTPRequestHandler.do_GET(self)
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")

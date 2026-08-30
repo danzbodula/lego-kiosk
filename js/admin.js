@@ -174,6 +174,9 @@ var Admin = (function () {
     nodes.pause = actionRow('PAUSE KIOSK', 'Shows visitors a back-shortly screen', '', onPause);
     ctrl.appendChild(nodes.pause);
 
+    nodes.cam = actionRow('TEST CAMERA', 'Live view from the Pi camera', '', onCamera);
+    ctrl.appendChild(nodes.cam);
+
     var sim = actionRow('SIMULATED BUILDS', 'Off means the real arm is driving', 'ad-last', onSim);
     nodes.simSw = makeSwitch(!!(window.DPT_CONFIG && DPT_CONFIG.SIMULATE_BUILD));
     sim.appendChild(nodes.simSw);
@@ -306,6 +309,78 @@ var Admin = (function () {
     refresh();
   }
 
+  /* Camera test.
+     A capture on a Pi Zero W takes about 2.5 seconds, so this refreshes on a
+     timer rather than streaming: each frame is a fresh GET of /camera.jpg with
+     a cache-buster.  The next request is only issued once the previous image
+     has actually loaded, so a slow Pi throttles itself instead of piling up
+     requests it cannot answer. */
+  var camEl = null, camImg = null, camStatus = null, camTimer = null, camOn = false;
+
+  function onCamera() {
+    if (!camEl) buildCamera();
+    camOn = true;
+    Anim.addClass(camEl, 'is-on');
+    setCamStatus('STARTING CAMERA...');
+    nextFrame();
+  }
+
+  function buildCamera() {
+    camEl = el('div', 'ad-cam');
+
+    var bar = el('div', 'ad-bar');
+    var t = el('div', 'ad-title');
+    txt(t, 'CAMERA TEST');
+    bar.appendChild(t);
+    var close = el('div', 'ad-done');
+    txt(close, 'CLOSE');
+    tapBind(close, closeCamera);
+    bar.appendChild(close);
+    camEl.appendChild(bar);
+
+    var stage = el('div', 'ad-cam-stage');
+    camImg = document.createElement('img');
+    camImg.className = 'ad-cam-img';
+    camImg.alt = '';
+    stage.appendChild(camImg);
+    camEl.appendChild(stage);
+
+    camStatus = el('div', 'ad-cam-status');
+    camEl.appendChild(camStatus);
+
+    document.getElementById('admin').parentNode.appendChild(camEl);
+  }
+
+  function setCamStatus(s) {
+    camStatus.innerHTML = '';
+    txt(camStatus, s);
+  }
+
+  function nextFrame() {
+    if (!camOn) return;
+    var img = new Image();
+    var started = new Date().getTime();
+    img.onload = function () {
+      if (!camOn) return;
+      camImg.src = img.src;                      // swap in only once decoded
+      setCamStatus('LIVE  ·  ' + ((new Date().getTime() - started) / 1000).toFixed(1) + 's per frame');
+      camTimer = window.setTimeout(nextFrame, 400);
+    };
+    img.onerror = function () {
+      if (!camOn) return;
+      setCamStatus('NO SIGNAL - check the ribbon cable, then close and retry');
+      camTimer = window.setTimeout(nextFrame, 3000);
+    };
+    img.src = 'camera.jpg?t=' + new Date().getTime();
+  }
+
+  function closeCamera() {
+    camOn = false;
+    if (camTimer) { window.clearTimeout(camTimer); camTimer = null; }
+    Anim.removeClass(camEl, 'is-on');
+    camImg.src = '';                             // drop the decoded frame
+  }
+
   function onSim() {
     if (!window.DPT_CONFIG) return;
     DPT_CONFIG.SIMULATE_BUILD = !DPT_CONFIG.SIMULATE_BUILD;
@@ -373,6 +448,7 @@ var Admin = (function () {
     if (!open) return;
     open = false;
     disarm();
+    if (camOn) closeCamera();
     Anim.removeClass(host, 'is-on');
     if (idleTick) { window.clearInterval(idleTick); idleTick = null; }
     App.resetIdle();
