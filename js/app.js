@@ -91,7 +91,7 @@ var App = (function () {
 
     var row = document.createElement('div');
     row.className = 'attract-row';
-    var i, pips = [];
+    var i, pips = [], chipEls = [];
     for (i = 0; i < n; i++) {
       var t = document.createElement('div');
       t.className = 'attract-chip';
@@ -101,6 +101,7 @@ var App = (function () {
       t.style.backgroundImage = 'url(' + Assets.thumb(HAIR_STYLES[i]) + ')';
       t.style.backgroundSize = cell + 'px ' + cell + 'px';
       row.appendChild(t);
+      chipEls.push(t);
       pips.push(left + i * (cell + GAP) + Math.round((cell - 34) / 2));
     }
 
@@ -125,6 +126,7 @@ var App = (function () {
     attractEl.stageNode = stage;
     attractEl.pipNode = pip;
     attractEl.pipStops = pips;
+    attractEl.chipEls = chipEls;
     attractEl.countNode = count;
   }
 
@@ -135,9 +137,16 @@ var App = (function () {
     stopPip();
     var stops = attractEl.pipStops, pip = attractEl.pipNode;
     if (!stops || !stops.length) return;
+    var chips = attractEl.chipEls || [];
     function move() {
       pip.style.webkitTransform = 'translate3d(' + stops[pipAt] + 'px,0,0)';
       pip.style.transform = 'translate3d(' + stops[pipAt] + 'px,0,0)';
+      // only ever two chips mid-transition, so this stays inside the budget
+      var k;
+      for (k = 0; k < chips.length; k++) {
+        if (k === pipAt) Anim.addClass(chips[k], 'is-lit');
+        else Anim.removeClass(chips[k], 'is-lit');
+      }
       pipAt = (pipAt + 1) % stops.length;
     }
     move();

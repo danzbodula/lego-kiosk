@@ -543,10 +543,15 @@
   top: 0;
   background-repeat: no-repeat;
   background-position: center center;
-  /* Full strength on purpose.  Dimming these turned BLACK and CURLY into grey,
-     which misrepresents the part a visitor is about to choose - and the pip
-     already supplies all the emphasis the row needs. */
+  /* Held back so the row reads as a quiet menu rather than competing with the
+     spinning head above it.  The pip lights each one to full strength as it
+     passes, which is also what stops BLACK and CURLY reading as grey. */
+  opacity: 0.55;
+  -webkit-transition: opacity 400ms linear;
+  transition: opacity 400ms linear;
 }
+
+.attract-chip.is-lit { opacity: 1; }
 
 .attract-pip {
   position: absolute;
