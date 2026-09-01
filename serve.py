@@ -17,6 +17,7 @@ iPad cannot reach over IPv4.
 import sys
 import json
 import os
+import socket
 import subprocess
 import threading
 import time
@@ -44,16 +45,58 @@ CAM_FILE = "/tmp/dpt-cam.jpg"
 # Nothing in this file talks to the robot yet.  send_to_robot() is the single
 # place that has to change once the controller's protocol is known.
 STATE_LOCK = threading.Lock()
-STATE = {"hair_choice": None, "style": None, "at": None, "sent_to_robot": False}
+STATE = {"hair_choice": None, "style": None, "at": None,
+         "sent_to_robot": False, "robot_reply": None}
+
+# Rainbow Robotics command channel.  Verified against Rainbow's own client
+# library (github.com/RainbowRobotics/rbpodo):
+#
+#   common.hpp   static inline const unsigned int kCommandPort = 5000;
+#   socket.cpp   msg += "\n";  ::send(sock_, msg.data(), msg.size(), 0);
+#   cobot.hpp    eval() sends the script string straight down that socket
+#
+# So the wire format is: plain TCP to 5000, ASCII script, newline terminated.
+# Assigning a global is just the script statement "_GLOBAL_0 = 3".
+#
+# OFF by default.  Set DPT_ROBOT_HOST to the controller's address and
+# DPT_ROBOT_ENABLED=1 to turn it on - until then the kiosk runs exactly as it
+# does now and /api/state reports sent_to_robot false.
+ROBOT_ENABLED = os.environ.get("DPT_ROBOT_ENABLED", "0") == "1"
+ROBOT_HOST = os.environ.get("DPT_ROBOT_HOST", "192.168.8.60")
+ROBOT_PORT = int(os.environ.get("DPT_ROBOT_PORT", "5000"))
+ROBOT_GLOBAL = os.environ.get("DPT_ROBOT_GLOBAL", "_GLOBAL_0")
 
 
 def send_to_robot(hair_choice, style):
-    """Hand hair_choice to the RB5.  Not implemented - see README.
+    """Set the controller's global to hair_choice.  Returns (ok, reply).
 
-    Returns True when the controller has accepted it.  Left returning False so
-    /api/state reports honestly that nothing has been delivered, rather than a
-    stub quietly reporting success."""
-    return False
+    A fresh connection per build rather than a held socket: it is one command
+    every twenty seconds, and a connection that reconnects on its own is the
+    right trade at a trade show.  Every failure is swallowed - the kiosk must
+    keep serving visitors whatever the arm is doing."""
+    if not ROBOT_ENABLED:
+        return False, "disabled (set DPT_ROBOT_ENABLED=1)"
+    script = "%s = %d" % (ROBOT_GLOBAL, hair_choice)
+    try:
+        sock = socket.create_connection((ROBOT_HOST, ROBOT_PORT), timeout=2.0)
+    except Exception as exc:
+        return False, "connect failed: %s" % exc
+    try:
+        sock.sendall((script + "\n").encode("ascii"))
+        sock.settimeout(1.5)
+        try:
+            reply = sock.recv(512).decode("utf-8", "replace").strip()
+        except Exception:
+            reply = ""            # some firmware answers nothing on success
+    except Exception as exc:
+        return False, "send failed: %s" % exc
+    finally:
+        try:
+            sock.close()
+        except Exception:
+            pass
+    ok = "not allowed" not in reply.lower() and "error" not in reply.lower()
+    return ok, (reply or "(no reply)")
 
 
 def capture():
@@ -102,9 +145,12 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
             STATE["hair_choice"] = choice
             STATE["style"] = data.get("style")
             STATE["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-            STATE["sent_to_robot"] = send_to_robot(choice, STATE["style"])
+            ok, reply = send_to_robot(choice, STATE["style"])
+            STATE["sent_to_robot"] = ok
+            STATE["robot_reply"] = reply
             snap = dict(STATE)
-        print("  hair_choice = %d (%s)" % (choice, snap["style"]))
+        print("  hair_choice = %d (%s)  robot: %s" %
+              (choice, snap["style"], snap["robot_reply"]))
         self._json(200, {"ok": True, "state": snap})
 
     def do_GET(self):
