@@ -58,11 +58,15 @@ STATE = {"hair_choice": None, "style": None, "at": None,
 # So the wire format is: plain TCP to 5000, ASCII script, newline terminated.
 # Assigning a global is just the script statement "_GLOBAL_0 = 3".
 #
-# OFF by default.  Set DPT_ROBOT_HOST to the controller's address and
-# DPT_ROBOT_ENABLED=1 to turn it on - until then the kiosk runs exactly as it
-# does now and /api/state reports sent_to_robot false.
+# The controller answers on 192.168.1.100, found by ARP-scanning the direct
+# Ethernet link; both 5000 and 5001 are open and a print() statement sent to
+# 5000 came back "The command was executed", so raw script is accepted.
+#
+# The Pi reaches it on eth0 at 192.168.1.250 via the "robot-link" profile,
+# which is marked never-default so the robot cable can never steal the route
+# the kiosk and SSH depend on.
 ROBOT_ENABLED = os.environ.get("DPT_ROBOT_ENABLED", "0") == "1"
-ROBOT_HOST = os.environ.get("DPT_ROBOT_HOST", "192.168.8.60")
+ROBOT_HOST = os.environ.get("DPT_ROBOT_HOST", "192.168.1.100")
 ROBOT_PORT = int(os.environ.get("DPT_ROBOT_PORT", "5000"))
 ROBOT_GLOBAL = os.environ.get("DPT_ROBOT_GLOBAL", "_GLOBAL_0")
 
