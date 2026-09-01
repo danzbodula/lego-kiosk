@@ -73,6 +73,13 @@ ROBOT_ENABLED = os.environ.get("DPT_ROBOT_ENABLED", "0") == "1"
 ROBOT_HOST = os.environ.get("DPT_ROBOT_HOST", "192.168.1.100")
 ROBOT_PORT = int(os.environ.get("DPT_ROBOT_PORT", "5000"))
 ROBOT_GLOBAL = os.environ.get("DPT_ROBOT_GLOBAL", "_GLOBAL_0")
+# Source address to send from - the alias the booth wifi profile carries.
+# Binding to it does two jobs.  It pins the traffic to the right interface, and
+# it fails closed: if the Pi has fallen back to the house wifi, that address is
+# not configured, the bind fails, and nothing is sent.  That matters because the
+# house network is ALSO 192.168.1.x, so without this an unreachable robot could
+# mean writing _GLOBAL_0 into whatever else happens to answer on .100 there.
+ROBOT_SRC = os.environ.get("DPT_ROBOT_SRC", "192.168.1.250")
 
 
 def robot_reachable():
@@ -81,9 +88,13 @@ def robot_reachable():
     if not ROBOT_ENABLED:
         return False, "disabled"
     try:
-        sock = socket.create_connection((ROBOT_HOST, ROBOT_PORT), timeout=2.0)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2.0)
+        if ROBOT_SRC:
+            sock.bind((ROBOT_SRC, 0))
+        sock.connect((ROBOT_HOST, ROBOT_PORT))
         sock.close()
-        return True, "%s:%d reachable" % (ROBOT_HOST, ROBOT_PORT)
+        return True, "%s:%d reachable from %s" % (ROBOT_HOST, ROBOT_PORT, ROBOT_SRC)
     except Exception as exc:
         return False, "%s:%d unreachable (%s)" % (ROBOT_HOST, ROBOT_PORT, exc)
 
@@ -99,7 +110,11 @@ def send_to_robot(hair_choice, style):
         return False, "disabled (set DPT_ROBOT_ENABLED=1)"
     script = "%s = %d" % (ROBOT_GLOBAL, hair_choice)
     try:
-        sock = socket.create_connection((ROBOT_HOST, ROBOT_PORT), timeout=2.0)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2.0)
+        if ROBOT_SRC:
+            sock.bind((ROBOT_SRC, 0))       # fails unless we are on the booth net
+        sock.connect((ROBOT_HOST, ROBOT_PORT))
     except Exception as exc:
         return False, "connect failed: %s" % exc
     try:
