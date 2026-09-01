@@ -10,6 +10,15 @@ var App = (function () {
   var warmFrames = [];             // card-scale frames for the selected style
   var heroFrames = [];             // full-size frames, warmed when a build starts
 
+  /* hair_choice: the style's position in the manifest, 0-7.  The order in
+     data/hair.js IS the contract with the robot, so reordering that file
+     renumbers the parts - a comment there says so. */
+  function hairIndex(id) {
+    var i;
+    for (i = 0; i < HAIR_STYLES.length; i++) if (HAIR_STYLES[i].id === id) return i;
+    return 0;
+  }
+
   function styleById(id) {
     var i;
     for (i = 0; i < HAIR_STYLES.length; i++) if (HAIR_STYLES[i].id === id) return HAIR_STYLES[i];
@@ -366,6 +375,7 @@ var App = (function () {
       tap: function () {
         var id = Screens.Screen1.getSelected();
         resetIdle();
+        DPTKiosk.setHairChoice(hairIndex(id), id);
         DPTKiosk.onContinue(id);   // hook first, so an override can see the tap
         goBuild(id);
       }
@@ -451,6 +461,27 @@ window.DPTKiosk = {
   },
 
   /* ---- called by the UI, overridden by the hardware layer ---- */
+
+  /* ---- hair_choice ----
+     Called the moment CONTINUE is tapped, before the build screen appears.
+     index is the style's position in data/hair.js, 0-7.
+
+     The default posts it to the Pi, which holds it and serves it back at
+     GET /api/state - so the robot side can either be pushed to later or poll,
+     whichever suits the controller.  Override this whole function if you would
+     rather talk to the controller directly from the tablet. */
+  setHairChoice: function (index, styleId) {
+    console.log('[DPTKiosk] hair_choice =', index, '(' + styleId + ')');
+    this.hairChoice = index;
+    try {
+      var x = new XMLHttpRequest();
+      x.open('POST', 'api/hair-choice', true);
+      x.setRequestHeader('Content-Type', 'application/json');
+      x.send('{"hair_choice":' + index + ',"style":"' + styleId + '"}');
+    } catch (e) { /* the kiosk must never fail because the robot link is down */ }
+  },
+
+  hairChoice: 0,
 
   onSelectionChange: function (styleId) { console.log('[DPTKiosk] onSelectionChange', styleId); },
   onContinue:        function (styleId) { console.log('[DPTKiosk] onContinue', styleId); },

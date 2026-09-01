@@ -10,6 +10,14 @@
  *            226px of card at 17px/600)
  *   angles   frame order for the turntable.  Files are assets/hair/<id>/<angle>.png
  *
+ * ORDER IS A CONTRACT.  A style's position in this array is its hair_choice
+ * value, 0-7, sent to the robot when CONTINUE is tapped.  Reordering this array
+ * renumbers the parts as far as the arm is concerned, so if the robot program
+ * has its own fixed numbering, match it here rather than translating in code.
+ *
+ *   0 brown   1 blonde   2 auburn   3 ginger
+ *   4 long    5 black    6 curly    7 cap
+ *
  * Physical part identity, for the hardware layer and for re-ordering stock:
  *   element  LEGO element ID (part + colour) - the number on the packing list
  *   design   LEGO/BrickLink design ID (the mould, any colour)
