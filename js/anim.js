@@ -141,6 +141,7 @@ var Anim = (function () {
     var warm = null;       // the one Image ref that keeps the sheet decoded
     var ready = false;     // has the sheet actually loaded?
     var wantStart = false, pendingSpeed = 0;
+    var token = 0;         // guards against a superseded sheet arriving late
 
     /* A per-cent background-position puts the image's P% point over the box's
        P% point, so with the sheet scaled to grid*100% the cells land exactly on
@@ -163,13 +164,29 @@ var Anim = (function () {
     function setStyle(style) {
       stop();
       ready = false;
+      /* Retire any sheet still in flight.  A Turntable outlives the styles
+         shown through it, and a slow request from an EARLIER style will happily
+         finish afterwards and paint itself over the current one - that is what
+         put the previous visitor's minifigure on the completion screen. Both
+         the detached handler and the generation token are needed: nulling
+         onload stops the common case, the token covers any ordering the
+         browser chooses. */
+      var mine = ++token;
+      if (warm) { warm.onload = null; warm = null; }
       var sheet = Assets.sprite(style, !!tOpts.thumbScale);
       grid = sheet.grid;
       seq = sheet.seq;
       idx = 0;
+      /* Drop whatever sheet is painted right now.  A Turntable reused across
+         styles - the completion screen keeps one for the life of the app -
+         otherwise keeps showing the PREVIOUS minifigure until the new sheet
+         arrives, which read as the last build's head appearing first.  The
+         caller's placeholder covers the gap. */
+      strip.style.backgroundImage = 'none';
       var img = new Image();                       // also holds it against eviction
       Debug.trackImage(sheet.url, img);
       img.onload = function () {
+        if (mine !== token) return;                // superseded; drop it
         strip.style.backgroundImage = 'url(' + sheet.url + ')';
         strip.style.backgroundSize = (grid * 100) + '% ' + (grid * 100) + '%';
         place(seq[0]);
@@ -210,6 +227,7 @@ var Anim = (function () {
     function destroy() {
       stop();
       ready = false;
+      token++;                                     // orphan any pending load
       if (warm) { warm.onload = null; warm = null; }
       if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
     }

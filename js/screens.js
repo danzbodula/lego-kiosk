@@ -100,10 +100,22 @@ var Screens = (function () {
        give that card its static thumbnail back. */
     function stopCardSpin() {
       if (!cardSpin) return;
-      var host = cardSpin.host;
-      cardSpin.spin.destroy();
+      var host = cardSpin.host, spin = cardSpin.spin;
+      var style = host && host.__style;
       cardSpin = null;
-      if (host) host.style.backgroundImage = 'url(' + Assets.thumb(host.__style) + ')';
+      spin.stop();                                 // stop stepping immediately
+      if (!host || !style) { spin.destroy(); return; }
+      /* Put the thumbnail back BEFORE taking the strip away, and only once it
+         has actually loaded.  Removing the strip first left a frame with
+         neither painted, which is what made the card being deselected flash
+         empty the moment you tapped a different one. */
+      var url = Assets.thumb(style);
+      var img = new Image();
+      img.onload = img.onerror = function () {
+        host.style.backgroundImage = 'url(' + url + ')';
+        spin.destroy();
+      };
+      img.src = url;
     }
 
     /* Run the turntable inside the selected card's 88px tile.  Only ever one
@@ -768,6 +780,7 @@ var Screens = (function () {
   var Screen3 = (function () {
     var host, figure, tickPath, pulse, nameEl, spin;
     var built = false, TICK_LEN = 60;
+    var prepared = null;         // style id the figure is already set up for
 
     function build() {
       if (built) return;
@@ -817,8 +830,14 @@ var Screens = (function () {
       });
     }
 
-    /* checkmark draws (500ms) -> one ring pulse -> the figure springs in */
-    function show(style) {
+    /* Everything that must already be true when the screen starts sliding in:
+       the right style loaded, the figure hidden, the tick wound back.
+     *
+     * This has to run BEFORE the push, not in its completion callback.  The
+       done screen is a real element that survives between builds, so leaving
+       it until afterwards meant it slid into view still showing the PREVIOUS
+       visitor's minifigure for the length of the transition, then swapped. */
+    function prepare(style) {
       build();
       nameEl.innerHTML = '';
       nameEl.appendChild(document.createTextNode(style.name + ' HAIR'));
@@ -833,6 +852,12 @@ var Screens = (function () {
       Anim.removeClass(pulse, 'is-pulsing');
       Anim.removeClass(figure, 'is-in');
       Anim.reflow(tickPath);
+      prepared = style.id;
+    }
+
+    /* checkmark draws (500ms) -> one ring pulse -> the figure springs in */
+    function show(style) {
+      if (prepared !== style.id) prepare(style);
 
       window.setTimeout(function () { tickPath.setAttribute('stroke-dashoffset', '0'); }, 120);
       window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 640);
@@ -844,7 +869,7 @@ var Screens = (function () {
 
     function stop() { if (spin) spin.stop(); }
 
-    return { build: build, show: show, stop: stop };
+    return { build: build, prepare: prepare, show: show, stop: stop };
   })();
 
   /* Pick the layout once, here, so app.js never branches on it. */

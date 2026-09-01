@@ -167,6 +167,9 @@ var App = (function () {
     stopSimulation();
     var style = styleById(Screens.Screen1.getSelected());
     Screens.Screen3.build();
+    // load the right minifigure and hide the figure BEFORE the slide starts,
+    // or the done screen animates in still showing the previous build's head
+    Screens.Screen3.prepare(style);
     var from = screenEl(current), to = screenEl('done');
     current = 'done';
     Anim.push(from, to, function () {
