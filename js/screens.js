@@ -628,7 +628,8 @@ var Screens = (function () {
   /* --------------------------- SCREEN 2 --------------------------------- */
 
   var Screen2 = (function () {
-    var host, ringFill, pctEl, lineA, lineB, lineTop, errBox, errMsg, armWrap;
+    var host, ringFill, pctEl, remainEl, lineA, lineB, lineTop, errBox, errMsg, armWrap;
+    var remainShown = null;          // seconds currently on screen
     var C = 0;                       // ring circumference
     var built = false;
     var currentLabel = '';
@@ -685,6 +686,9 @@ var Screens = (function () {
       pctEl.appendChild(document.createTextNode('0%'));
       col.appendChild(pctEl);
 
+      remainEl = el('div', 'build-remain');
+      col.appendChild(remainEl);
+
       col.appendChild(el('div', 's1-spacer'));
 
       var note = el('div', 'build-note');
@@ -738,11 +742,36 @@ var Screens = (function () {
       lineTop = incoming;
     }
 
+    /* The quiet half of an iOS "big value, small caption" pairing: the ring and
+       the percentage say how far along, this says how long is left.
+     *
+     * Scaled by reported progress rather than counted blind off a clock, so a
+       real arm running slower or faster than BUILD_ESTIMATE_S still lands
+       roughly right.  It only ever counts DOWN - the simulated curve is
+       deliberately uneven, and a remaining time that jumps upward is the single
+       thing that makes an estimate feel broken.  Under four seconds it stops
+       giving numbers it cannot stand behind and says ALMOST DONE instead. */
+    function setRemaining(p) {
+      if (!remainEl) return;
+      var est = (window.DPT_CONFIG && DPT_CONFIG.BUILD_ESTIMATE_S) || 18;
+      var target = Math.ceil(est * (100 - p) / 100);
+      if (remainShown === null || target < remainShown) remainShown = target;
+
+      var txt = '';
+      if (p < 100) txt = (remainShown <= 3) ? 'ALMOST DONE'
+                                            : 'ABOUT ' + remainShown + ' SECONDS';
+      if (remainEl.__txt === txt) return;         // no needless repaint
+      remainEl.__txt = txt;
+      remainEl.innerHTML = '';
+      if (txt) remainEl.appendChild(document.createTextNode(txt));
+    }
+
     function setProgress(percent, stageLabel) {
       build();
       var p = Math.max(0, Math.min(100, Number(percent) || 0));
       if (ringFill) ringFill.setAttribute('stroke-dashoffset', String(C * (1 - p / 100)));
       if (pctEl) { pctEl.innerHTML = ''; pctEl.appendChild(document.createTextNode(Math.round(p) + '%')); }
+      setRemaining(p);
       setStage(stageLabel || stageFor(p));
     }
 
@@ -760,6 +789,8 @@ var Screens = (function () {
       Anim.removeClass(lineA, 'is-on'); Anim.removeClass(lineA, 'is-out');
       Anim.removeClass(lineB, 'is-on'); Anim.removeClass(lineB, 'is-out');
       Anim.removeClass(errBox, 'is-on');
+      remainShown = null;                        // next build estimates afresh
+      if (remainEl) { remainEl.__txt = null; remainEl.innerHTML = ''; }
     }
 
     function error(message) {

@@ -576,3 +576,16 @@
   letter-spacing: 1.6px;
   color: #8E8E93;
 }
+
+/* The caption under the percentage.  Secondary label grey at caption weight -
+   present when you look for it, invisible when you are watching the arm. */
+.build-remain {
+  height: 22px;
+  line-height: 22px;
+  margin-top: 2px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #8E8E93;
+}

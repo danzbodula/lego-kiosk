@@ -20,7 +20,7 @@ var DPT_CONFIG = {
   // Bumped by bust.py. Appended to every image URL so a Safari cache entry
   // created before the no-store headers existed cannot keep serving a stale
   // frame - changing the URL is the one thing the cache cannot ignore.
-  ASSET_VERSION: '1788290777',
+  ASSET_VERSION: '1788291358',
 
   // Where the hair art comes from.  One word switches the whole app.
   //   'render'      assets/hair-render/  - rendered from the real LDraw part
@@ -42,6 +42,13 @@ var DPT_CONFIG = {
   // Parts the arm dispenses pneumatically.  One completed minifigure consumes
   // one from each magazine; staff refill from the panel behind a long press on
   // the logo.  Counts persist across a reload so a mid-show reboot keeps them.
+  // How long a build is expected to take, in seconds.  Drives the "ABOUT n
+  // SECONDS" line on the build screen, which is scaled by reported progress
+  // rather than being a blind countdown - so it stays roughly honest even when
+  // a real arm runs slower or faster than this.  Set it to the arm's real cycle
+  // time once the hardware is driving.
+  BUILD_ESTIMATE_S: 18,
+
   MAGAZINE_CAPACITY: 20,
 
   LAYOUT: 'A',
