@@ -58,13 +58,17 @@ STATE = {"hair_choice": None, "style": None, "at": None,
 # So the wire format is: plain TCP to 5000, ASCII script, newline terminated.
 # Assigning a global is just the script statement "_GLOBAL_0 = 3".
 #
-# The controller answers on 192.168.1.100, found by ARP-scanning the direct
-# Ethernet link; both 5000 and 5001 are open and a print() statement sent to
-# 5000 came back "The command was executed", so raw script is accepted.
+# The controller answers on 192.168.1.100 - both 5000 and 5001 open, and a
+# print() statement sent to 5000 came back "The command was executed", so raw
+# script is accepted, not just the task-level commands the public docs list.
 #
-# The Pi reaches it on eth0 at 192.168.1.250 via the "robot-link" profile,
-# which is marked never-default so the robot cable can never steal the route
-# the kiosk and SSH depend on.
+# It is plugged into a LAN port on the travel router and keeps its own static
+# 192.168.1.100.  The router bridges its LAN ports and its wifi into ONE layer-2
+# segment, so the Pi simply carries a second address - 192.168.1.250 alongside
+# 192.168.8.50, both on wlan0 - and the two talk directly.  No routing, no
+# change to the controller, and no USB ethernet adapter: hot-plugging a gigabit
+# dongle browned out the Pi Zero W and reset it, which is the whole reason the
+# cable moved to the router.
 ROBOT_ENABLED = os.environ.get("DPT_ROBOT_ENABLED", "0") == "1"
 ROBOT_HOST = os.environ.get("DPT_ROBOT_HOST", "192.168.1.100")
 ROBOT_PORT = int(os.environ.get("DPT_ROBOT_PORT", "5000"))
