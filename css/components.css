@@ -1,0 +1,727 @@
+/* ---------------------------------------------------------------------------
+ * components.css - logo, stepper, headline, hair card, primary button, helper.
+ *
+ * Animation rule for this whole file: only `transform` and `opacity` ever
+ * change.  Anything that looks like a colour or border fade is a duplicate
+ * element stacked on top whose opacity is animated instead.
+ * ------------------------------------------------------------------------ */
+
+/* --- DPT logo ---------------------------------------------------------- */
+/* background-image on a div, not <img> - object-fit does not exist on Safari 9 */
+/* 233x64, up from 160x44: at the old size the lockup read as an afterthought
+   above a 768px-wide screen. Source is 466x128 (2x) off the 751px master.
+   Growing this eats the screen-1 spacer - see the budget in screens.css. */
+.s1-logo {
+  width: 233px;
+  height: 64px;
+  margin: 0 auto;
+  background-image: url(../assets/logo/dpt-logo.png);
+  background-size: 233px 64px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* The square badge, used wherever a screen already has a big central element.
+   The full horizontal lockup only leads screen 1; beside a 420px progress ring
+   or a spinning minifigure it reads as an afterthought. */
+.s1-badge {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  background-image: url(../assets/logo/dpt-badge.svg);
+  background-size: 80px 80px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* --- step indicator ---------------------------------------------------- */
+.stepper {
+  height: 56px;
+  text-align: center;
+  font-size: 0;                     /* kills inline-block whitespace */
+}
+
+.step {
+  display: inline-block;
+  width: 64px;
+  vertical-align: top;
+}
+
+.step-dot {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  border: 2px solid #C7C7CC;        /* pending: recedes, so active reads first */
+  border-radius: 16px;
+  text-align: center;
+}
+
+.step-num {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 28px;
+  color: #8E8E93;
+}
+
+.step-label {
+  margin-top: 8px;
+  white-space: nowrap;              /* wrapping here would break the 56px budget */
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #8E8E93;
+}
+
+.step-bar {
+  display: inline-block;
+  width: 64px;
+  height: 1px;
+  margin-top: 16px;
+  background: #E5E5EA;
+  vertical-align: top;
+}
+
+/* The connector carries the progress: filled behind a completed step, so the
+   three dots read as one line being drawn rather than as separate markers. */
+.step-bar-done { background: #7E001B; }
+
+.step-active .step-dot { border-color: #7E001B; background: #7E001B; }
+.step-active .step-num { color: #FFFFFF; }
+.step-active .step-label { color: #7E001B; }
+
+.step-done .step-dot { border-color: #7E001B; background: #7E001B; }
+.step-done .step-label { color: #7E001B; }
+.step-done .step-num { color: #FFFFFF; }
+
+/* --- headline block (140px total) --------------------------------------
+ *
+ * DISPLAY STACK.  The DPT wordmark is a very heavy, very tightly set
+ * industrial grotesque.  San Francisco is far too humanist and too wide to
+ * carry that voice, but iOS ships Helvetica Neue's condensed cuts and they
+ * are addressable by PostScript name - so we ask for those first and fall
+ * back to -apple-system at 800 anywhere they are missing (a desktop browser).
+ * Do not "tidy" the PostScript names away; they are what makes the headline
+ * look like the logo on the actual device.
+ *
+ *   30 (BUILD YOUR) + 76 (MINIFIGURE) + 34 (rule + label) = 140
+ * ----------------------------------------------------------------------- */
+.headline { height: 140px; text-align: center; }
+
+.h-small {
+  height: 30px;
+  line-height: 30px;
+  font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue",
+               -apple-system, Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #000000;
+}
+
+.h-big {
+  height: 76px;
+  line-height: 76px;
+  font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
+               "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  color: #7E001B;
+}
+
+/* The logo sets its tagline as letterspaced caps under a full-width hairline.
+   Echoing that reads far more like the brand than rules either side. */
+.h-rule {
+  position: relative;
+  height: 34px;
+  width: 672px;
+  margin: 0 auto;
+}
+
+.rule-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #000000;
+}
+
+.rule-text {
+  display: block;
+  padding-top: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  color: #000000;
+}
+
+/* --- hair grid --------------------------------------------------------- */
+/* inline-block, not grid or flex-gap: neither exists on Safari 9 */
+.hair-grid {
+  width: 672px;
+  margin: 0 auto -16px auto;
+  font-size: 0;
+}
+
+/* The slot is the layer-promotion handle.  The card inside it scales; the slot
+   gets translateZ(0) only while that scale is running (see animations.css), so
+   we never hold eight composited layers at once on a 512MB device. */
+.card-slot {
+  display: inline-block;
+  width: 326px;
+  height: 108px;
+  margin: 0 20px 16px 0;
+  vertical-align: top;
+}
+
+.card-slot:nth-child(2n) { margin-right: 0; }
+
+.card {
+  position: relative;
+  width: 326px;
+  height: 108px;
+  background: #FFFFFF;
+  border: 1px solid #E5E5EA;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* burgundy tint wash - opacity fades in, background-color never animates */
+.card-wash {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #F6EDEF;
+  border-radius: 13px;
+  opacity: 0;
+}
+
+/* 2px selected ring - a stacked border, so border-color never animates */
+.card-ring {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 2px solid #7E001B;
+  border-radius: 14px;
+  opacity: 0;
+}
+
+.card-thumb {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 88px;
+  height: 88px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;         /* replaces object-fit: contain */
+}
+
+.card-name {
+  position: absolute;
+  top: 0;
+  left: 112px;
+  right: 44px;
+  height: 108px;
+  line-height: 108px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #1C1C1E;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.card-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  background: #7E001B;
+  opacity: 0;
+  -webkit-transform: scale(0.4);
+  transform: scale(0.4);
+}
+
+.card-check svg { margin: 6px 0 0 5px; }
+
+/* --- primary button ---------------------------------------------------- */
+.btn-wrap { text-align: center; }
+
+.btn-primary {
+  position: relative;
+  display: block;
+  width: 672px;                     /* 768 - 48 margins each side */
+  height: 76px;
+  margin: 0 auto;
+  background: #7E001B;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* pressed shade - stacked, so background-color never animates */
+.btn-press {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #5E0014;
+  border-radius: 16px;
+  opacity: 0;
+}
+
+.btn-label {
+  position: relative;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #FFFFFF;
+  line-height: 76px;
+}
+
+.btn-chevron {
+  position: absolute;
+  top: 27px;
+  right: 28px;
+}
+
+.btn-primary.is-disabled { opacity: 0.4; }
+
+/* secondary button (completion screen) */
+.btn-secondary {
+  position: relative;
+  display: block;
+  width: 672px;
+  height: 64px;
+  margin: 0 auto;
+  background: #FFFFFF;
+  border: 1px solid #E5E5EA;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.btn-secondary .btn-label {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #48484A;
+  line-height: 62px;
+}
+
+.btn-secondary .btn-press { background: #F2F2F5; }
+
+/* --- helper line ------------------------------------------------------- */
+.helper {
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 0;
+}
+
+.helper-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 7px;
+}
+
+.helper-text {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 15px;
+  color: #48484A;
+}
+
+/* --- staff panel ---------------------------------------------------------
+ *
+ * Reached by long-pressing the logo.  Deliberately reads as a different mode
+ * from the visitor-facing screens - iOS grouped-list ground rather than the
+ * app's #FAFAFA - while keeping the same burgundy, the same radii and the same
+ * type, so it is obviously the same product.
+ *
+ * Nothing animates but transform and opacity: the switch cross-fades two
+ * stacked tracks and translates its knob, and the confirm state on the danger
+ * row cross-fades a stacked amber layer.
+ *
+ * Budget, all in flow: 72 bar + 24 + (18+8+88) + (18+8+228) + 16+52
+ *   + (18+8+228) + 24+72 + 40 = 942, inside the 1004 with room to spare.
+ * ----------------------------------------------------------------------- */
+#admin {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #F2F2F7;
+  z-index: 900;
+  visibility: hidden;
+  opacity: 0;
+  -webkit-transform: translate3d(0, 18px, 0);
+  transform: translate3d(0, 18px, 0);
+  -webkit-transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+                      -webkit-transform 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+                      visibility 0s linear 260ms;
+  transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              transform 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              visibility 0s linear 260ms;
+}
+
+#admin.is-on {
+  visibility: visible;
+  opacity: 1;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+
+.ad-bar {
+  position: relative;
+  height: 72px;
+  background: #7E001B;
+}
+
+.ad-title {
+  position: absolute;
+  left: 24px;
+  top: 26px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  color: #FFFFFF;
+}
+
+.ad-done {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 78px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #FFFFFF;
+}
+
+.ad-body { padding: 10px 48px 0 48px; }
+
+.ad-head {
+  height: 18px;
+  margin-top: 12px;                 /* section rhythm; first one clears the bar */
+  margin-bottom: 8px;
+  padding-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #8E8E93;
+}
+
+.ad-card {
+  background: #FFFFFF;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* --- stats strip --- */
+.ad-stats { height: 88px; font-size: 0; }
+
+.ad-stat {
+  display: inline-block;
+  width: 33.33%;
+  padding-top: 18px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.ad-stat-val {
+  height: 30px;
+  line-height: 30px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1C1C1E;
+}
+
+/* the robot cell holds a word, not a number, so it sets smaller */
+.ad-stat-val.ad-stat-text { font-size: 17px; letter-spacing: 1px; }
+
+.ad-stat-lab {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #8E8E93;
+}
+
+/* --- rows --- */
+.ad-row {
+  position: relative;
+  height: 75px;
+  border-bottom: 1px solid #E5E5EA;
+}
+
+.ad-row.ad-last { border-bottom: 0; height: 76px; }
+
+.ad-row-label {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #1C1C1E;
+}
+
+.ad-row-sub {
+  position: absolute;
+  left: 20px;
+  top: 43px;
+  font-size: 12px;
+  color: #8E8E93;
+}
+
+/* --- magazines --- */
+.ad-count {
+  position: absolute;
+  right: 122px;
+  top: 22px;
+  width: 52px;
+  text-align: right;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1C1C1E;
+}
+
+.ad-mag.is-low .ad-count   { color: #B25000; }
+.ad-mag.is-empty .ad-count { color: #C62B1E; }
+.ad-mag.is-low .ad-row-label   { color: #B25000; }
+.ad-mag.is-empty .ad-row-label { color: #C62B1E; }
+
+.ad-refill {
+  position: absolute;
+  right: 20px;
+  top: 18px;
+  width: 88px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  border-radius: 13px;
+  background: #F2F2F7;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #7E001B;
+}
+
+.ad-refill-all {
+  height: 52px;
+  margin-top: 12px;
+  line-height: 52px;
+  text-align: center;
+  border-radius: 14px;
+  background: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #7E001B;
+}
+
+/* --- danger row: stacked amber, cross-faded, never a colour transition --- */
+.ad-danger { }
+
+.ad-danger:before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #FFF4E5;
+  opacity: 0;
+  -webkit-transition: opacity 180ms linear;
+  transition: opacity 180ms linear;
+}
+
+.ad-danger.is-confirm:before { opacity: 1; }
+.ad-danger .ad-row-label { color: #7E001B; }
+.ad-danger.is-confirm .ad-row-label,
+.ad-danger.is-confirm .ad-row-sub { color: #B25000; }
+
+/* --- iOS switch --- */
+.ad-sw {
+  position: absolute;
+  right: 20px;
+  top: 22px;
+  width: 51px;
+  height: 31px;
+}
+
+.ad-sw-off, .ad-sw-on {
+  position: absolute;
+  top: 0; left: 0;
+  width: 51px;
+  height: 31px;
+  border-radius: 16px;
+}
+
+.ad-sw-off { background: #E5E5EA; }
+
+.ad-sw-on {
+  background: #7E001B;
+  opacity: 0;
+  -webkit-transition: opacity 200ms linear;
+  transition: opacity 200ms linear;
+}
+
+.ad-sw.is-on .ad-sw-on { opacity: 1; }
+
+.ad-sw-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transition: -webkit-transform 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.ad-sw.is-on .ad-sw-knob {
+  -webkit-transform: translate3d(20px, 0, 0);
+  transform: translate3d(20px, 0, 0);
+}
+
+/* --- reset + footer --- */
+.ad-reset {
+  height: 72px;
+  margin-top: 16px;
+  line-height: 72px;
+  text-align: center;
+  border-radius: 16px;
+  background: #7E001B;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  color: #FFFFFF;
+}
+
+.ad-foot {
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  font-size: 11px;
+  color: #8E8E93;
+}
+
+/* --- paused overlay shown to visitors --- */
+.ad-pause {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #FAFAFA;
+  z-index: 800;
+  visibility: hidden;
+  opacity: 0;
+  text-align: center;
+  -webkit-transition: opacity 300ms linear, visibility 0s linear 300ms;
+  transition: opacity 300ms linear, visibility 0s linear 300ms;
+}
+
+.ad-pause.is-on {
+  visibility: visible;
+  opacity: 1;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+
+.ad-pause-title {
+  position: absolute;
+  top: 430px;
+  left: 0; right: 0;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #1C1C1E;
+}
+
+.ad-pause-sub {
+  position: absolute;
+  top: 492px;
+  left: 0; right: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #8E8E93;
+}
+
+/* Pressed feedback for every staff-panel control.  Opacity only - the one
+   property besides transform that may be animated on this device. */
+.ad-done.is-pressed,
+.ad-row.is-pressed,
+.ad-refill.is-pressed,
+.ad-refill-all.is-pressed,
+.ad-reset.is-pressed {
+  opacity: 0.45;
+}
+
+.ad-done, .ad-row, .ad-refill, .ad-refill-all, .ad-reset {
+  -webkit-transition: opacity 90ms linear;
+  transition: opacity 90ms linear;
+}
+
+.ad-pause-hint {
+  position: absolute;
+  top: 900px;
+  left: 0; right: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  color: #C7C7CC;
+}
+
+/* --- camera test ---------------------------------------------------------
+   Sits above the staff panel.  The frame is letterboxed with explicit width
+   and height rather than object-fit, which Safari 9 does not have. */
+.ad-cam {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #1C1C1E;
+  z-index: 950;
+  visibility: hidden;
+  opacity: 0;
+  -webkit-transition: opacity 220ms linear, visibility 0s linear 220ms;
+  transition: opacity 220ms linear, visibility 0s linear 220ms;
+}
+
+.ad-cam.is-on {
+  visibility: visible;
+  opacity: 1;
+  -webkit-transition-delay: 0s;
+  transition-delay: 0s;
+}
+
+.ad-cam-stage {
+  position: absolute;
+  top: 132px;
+  left: 24px;
+  width: 720px;
+  height: 540px;
+  background: #000000;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ad-cam-img {
+  display: block;
+  width: 720px;
+  height: 540px;
+}
+
+.ad-cam-status {
+  position: absolute;
+  top: 700px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  color: #C7C7CC;
+}

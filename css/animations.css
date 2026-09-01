@@ -1,0 +1,381 @@
+/* ---------------------------------------------------------------------------
+ * animations.css
+ *
+ * Rules, non-negotiable on an A5:
+ *   - only `transform` and `opacity` are ever animated
+ *   - every transition/keyframe carries a -webkit- prefix
+ *   - translate3d / translateZ(0) promotes, and the promotion is REMOVED when
+ *     the animation ends (see Anim.promote / Anim.unpromote in js/anim.js)
+ *   - no will-change: it does not exist on Safari 9
+ *
+ * Easing set - reuse these three, do not invent a fourth:
+ *   standard  cubic-bezier(0.4, 0.0, 0.2, 1)     300ms
+ *   overshoot cubic-bezier(0.34, 1.36, 0.64, 1)  420ms
+ *   sharp     cubic-bezier(0.4, 0.0, 1, 1)       200ms
+ * ------------------------------------------------------------------------ */
+
+/* --- layer promotion handle -------------------------------------------- */
+/* Added by JS for the duration of a transform only.  Never leave this on:
+   eight promoted cards at once will thrash texture memory on 512MB. */
+.is-animating {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* --- 1. app entrance ---------------------------------------------------- */
+.enter-init {
+  opacity: 0;
+  -webkit-transform: translate3d(0, 16px, 0);
+  transform: translate3d(0, 16px, 0);
+}
+
+/* the logo drifts DOWN into place rather than up */
+.enter-init-logo {
+  opacity: 0;
+  -webkit-transform: translate3d(0, -8px, 0);
+  transform: translate3d(0, -8px, 0);
+}
+
+.enter-run {
+  opacity: 1;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transition: opacity 340ms cubic-bezier(0.4, 0.0, 0.2, 1),
+                      -webkit-transform 340ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 340ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              transform 340ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* --- 2 & 3. card press, selection transfer ------------------------------ */
+.card {
+  -webkit-transition: -webkit-transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition: transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.card.is-selected {
+  -webkit-transform: scale(1.03);
+  transform: scale(1.03);
+}
+
+/* .is-pressed is declared after .is-selected so a press always wins */
+.card.is-pressed {
+  -webkit-transform: scale(0.97);
+  transform: scale(0.97);
+  -webkit-transition-duration: 90ms;
+  transition-duration: 90ms;
+  -webkit-transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+/* Outgoing ring/wash/check leave on the sharp curve in 180ms while the
+   incoming ones spring in over 320ms - the two overlap, so there is never a
+   frame with no selection visible. */
+.card-wash,
+.card-ring {
+  -webkit-transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1);
+  transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+.card.is-selected .card-wash,
+.card.is-selected .card-ring {
+  opacity: 1;
+  -webkit-transition-duration: 320ms;
+  transition-duration: 320ms;
+  -webkit-transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.card-check {
+  -webkit-transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1),
+                      -webkit-transform 180ms cubic-bezier(0.4, 0.0, 1, 1);
+  transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1),
+              transform 180ms cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+.card.is-selected .card-check {
+  opacity: 1;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+  -webkit-transition-duration: 320ms;
+  transition-duration: 320ms;
+  -webkit-transition-timing-function: cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition-timing-function: cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+/* --- button press ------------------------------------------------------- */
+.btn-press {
+  -webkit-transition: opacity 140ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 140ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.btn-primary.is-pressed .btn-press,
+.btn-secondary.is-pressed .btn-press { opacity: 1; }
+
+.btn-primary,
+.btn-secondary {
+  -webkit-transition: -webkit-transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition: transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.btn-primary.is-pressed,
+.btn-secondary.is-pressed {
+  -webkit-transform: scale(0.985);
+  transform: scale(0.985);
+  -webkit-transition-duration: 90ms;
+  transition-duration: 90ms;
+}
+
+/* --- 4. turntable ------------------------------------------------------- */
+/* Frames hard-cut by background-position, so nothing here transitions.  The
+   cross-fade this replaced was the wash-out: see the note in Anim.Turntable. */
+
+/* --- 5. screen transitions (iOS horizontal push) ------------------------ */
+.screen.is-moving {
+  -webkit-transition: -webkit-transform 380ms cubic-bezier(0.4, 0.0, 0.2, 1),
+                      opacity 380ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 380ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              opacity 380ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.screen.push-out {
+  -webkit-transform: translate3d(-25%, 0, 0);
+  transform: translate3d(-25%, 0, 0);
+  opacity: 0.6;
+}
+
+.screen.push-in-start {
+  -webkit-transform: translate3d(100%, 0, 0);
+  transform: translate3d(100%, 0, 0);
+}
+
+.screen.push-in-end {
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* back navigation reverses the direction */
+.screen.pop-out {
+  -webkit-transform: translate3d(100%, 0, 0);
+  transform: translate3d(100%, 0, 0);
+  opacity: 0.6;
+}
+
+.screen.pop-in-start {
+  -webkit-transform: translate3d(-25%, 0, 0);
+  transform: translate3d(-25%, 0, 0);
+  opacity: 0.6;
+}
+
+/* --- 6. attract / idle loop --------------------------------------------- */
+#app {
+  -webkit-transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+#app.is-dimmed { opacity: 0.55; }
+
+.attract {
+  -webkit-transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.attract.is-on {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* dismiss is quicker than the entrance - 250ms per spec */
+.attract.is-leaving {
+  -webkit-transition-duration: 250ms;
+  transition-duration: 250ms;
+}
+
+@-webkit-keyframes attractPulse {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.6; }
+}
+@keyframes attractPulse {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.6; }
+}
+
+.attract.is-on .attract-tap {
+  -webkit-animation: attractPulse 2.4s ease-in-out infinite;
+  animation: attractPulse 2.4s ease-in-out infinite;
+}
+
+/* --- REDUCED_MOTION escape hatch ---------------------------------------- */
+/* Everything above collapses to a flat 150ms opacity fade. */
+.reduced-motion .card,
+.reduced-motion .card-wash,
+.reduced-motion .card-ring,
+.reduced-motion .card-check,
+.reduced-motion .btn-primary,
+.reduced-motion .btn-secondary,
+.reduced-motion .btn-press,
+.reduced-motion .screen,
+.reduced-motion .enter-run,
+.reduced-motion #app,
+.reduced-motion .attract {
+  -webkit-transition: opacity 150ms linear !important;
+  transition: opacity 150ms linear !important;
+  -webkit-transform: none !important;
+  transform: none !important;
+}
+
+.reduced-motion .attract-tap {
+  -webkit-animation: none !important;
+  animation: none !important;
+}
+
+.reduced-motion .enter-init,
+.reduced-motion .enter-init-logo { opacity: 0; }
+
+/* --- layout B: chips --------------------------------------------------- */
+.chip-disc {
+  -webkit-transition: -webkit-transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition: transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.chip.is-selected .chip-disc {
+  -webkit-transform: scale(1.06);
+  transform: scale(1.06);
+}
+
+.chip.is-pressed .chip-disc {
+  -webkit-transform: scale(0.94);
+  transform: scale(0.94);
+  -webkit-transition-duration: 90ms;
+  transition-duration: 90ms;
+  -webkit-transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+  transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+.chip-wash,
+.chip-ring {
+  -webkit-transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1);
+  transition: opacity 180ms cubic-bezier(0.4, 0.0, 1, 1);
+}
+
+.chip.is-selected .chip-wash,
+.chip.is-selected .chip-ring {
+  opacity: 1;
+  -webkit-transition-duration: 320ms;
+  transition-duration: 320ms;
+  -webkit-transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* the track eases home when a drag is released; it is dragged with no
+   transition so the finger tracks 1:1 */
+.chips-track.is-settling {
+  -webkit-transition: -webkit-transform 320ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 320ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.reduced-motion .chip-disc,
+.reduced-motion .chip-wash,
+.reduced-motion .chip-ring,
+.reduced-motion .chips-track {
+  -webkit-transition: opacity 150ms linear !important;
+  transition: opacity 150ms linear !important;
+}
+
+/* --- 7. build screen ---------------------------------------------------- */
+
+/* stroke-dashoffset is the one property outside transform/opacity that we
+   animate.  It is explicitly cheap on this GPU (no layout, no repaint of the
+   whole layer) and is the standard way to draw a determinate ring. */
+.ring-fill {
+  -webkit-transition: stroke-dashoffset 320ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: stroke-dashoffset 320ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* stage labels rise 12px as they cross-fade */
+.stage-line {
+  -webkit-transform: translate3d(0, 12px, 0);
+  transform: translate3d(0, 12px, 0);
+  -webkit-transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+                      -webkit-transform 260ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1),
+              transform 260ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.stage-line.is-on {
+  opacity: 1;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+.stage-line.is-out {
+  opacity: 0;
+  -webkit-transform: translate3d(0, -10px, 0);
+  transform: translate3d(0, -10px, 0);
+}
+
+/* the arm never sits perfectly still, so the screen never looks frozen */
+@-webkit-keyframes armBob {
+  0%   { -webkit-transform: translate3d(0, 0, 0); }
+  50%  { -webkit-transform: translate3d(0, -3px, 0); }
+  100% { -webkit-transform: translate3d(0, 0, 0); }
+}
+@keyframes armBob {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(0, -3px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+.arm-wrap {
+  -webkit-animation: armBob 3s ease-in-out infinite;
+  animation: armBob 3s ease-in-out infinite;
+}
+
+.build-error {
+  -webkit-transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: opacity 260ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* --- 8. completion screen ----------------------------------------------- */
+
+/* the tick draws itself */
+.done-tick-path {
+  -webkit-transition: stroke-dashoffset 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: stroke-dashoffset 500ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@-webkit-keyframes donePulse {
+  0%   { -webkit-transform: scale(1);   opacity: 0.55; }
+  100% { -webkit-transform: scale(2.4); opacity: 0; }
+}
+@keyframes donePulse {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.done-pulse.is-pulsing {
+  -webkit-animation: donePulse 620ms cubic-bezier(0.4, 0.0, 0.2, 1) 1 forwards;
+  animation: donePulse 620ms cubic-bezier(0.4, 0.0, 0.2, 1) 1 forwards;
+}
+
+.done-figure {
+  -webkit-transition: opacity 420ms cubic-bezier(0.34, 1.36, 0.64, 1),
+                      -webkit-transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+  transition: opacity 420ms cubic-bezier(0.34, 1.36, 0.64, 1),
+              transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
+}
+
+.reduced-motion .arm-wrap,
+.reduced-motion .done-pulse.is-pulsing {
+  -webkit-animation: none !important;
+  animation: none !important;
+}
+
+.reduced-motion .done-figure,
+.reduced-motion .stage-line {
+  -webkit-transition: opacity 150ms linear !important;
+  transition: opacity 150ms linear !important;
+  -webkit-transform: none !important;
+  transform: none !important;
+}
