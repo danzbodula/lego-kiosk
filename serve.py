@@ -75,6 +75,19 @@ ROBOT_PORT = int(os.environ.get("DPT_ROBOT_PORT", "5000"))
 ROBOT_GLOBAL = os.environ.get("DPT_ROBOT_GLOBAL", "_GLOBAL_0")
 
 
+def robot_reachable():
+    """One TCP connect to the command port.  Cheap, and it is the only question
+    that matters: can we open 5000 right now."""
+    if not ROBOT_ENABLED:
+        return False, "disabled"
+    try:
+        sock = socket.create_connection((ROBOT_HOST, ROBOT_PORT), timeout=2.0)
+        sock.close()
+        return True, "%s:%d reachable" % (ROBOT_HOST, ROBOT_PORT)
+    except Exception as exc:
+        return False, "%s:%d unreachable (%s)" % (ROBOT_HOST, ROBOT_PORT, exc)
+
+
 def send_to_robot(hair_choice, style):
     """Set the controller's global to hair_choice.  Returns (ok, reply).
 
@@ -162,6 +175,12 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
         self._json(200, {"ok": True, "state": snap})
 
     def do_GET(self):
+        if self.path.split("?")[0] == "/api/robot":
+            ok, msg = robot_reachable()
+            self._json(200, {"enabled": ROBOT_ENABLED, "host": ROBOT_HOST,
+                             "port": ROBOT_PORT, "variable": ROBOT_GLOBAL,
+                             "reachable": ok, "detail": msg})
+            return
         if self.path.split("?")[0] == "/api/state":
             with STATE_LOCK:
                 self._json(200, dict(STATE))
@@ -215,5 +234,11 @@ if __name__ == "__main__":
     print("  On the iPad:   http://192.168.137.1:%d" % port)
     print("")
     print("  Leave this window OPEN. Ctrl+C to stop.")
+    print("")
+    # Say at startup whether the arm is there.  It lands in the service journal,
+    # so `journalctl -u dpt-kiosk` answers "is the robot link up?" without
+    # anyone having to reason about interfaces.
+    _ok, _msg = robot_reachable()
+    print("  robot: %s  (%s = %s)" % (_msg, ROBOT_GLOBAL, "live" if _ok else "not sending"))
     print("")
     srv.serve_forever()
