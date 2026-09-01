@@ -26,10 +26,13 @@ var Screens = (function () {
 
   function applyThumb(node, style) {
     var primary = Assets.thumb(style);
+    /* Assign straight away so the browser paints it the moment it arrives.
+       Waiting for a probe to load before even naming the image cost a whole
+       extra round trip during which the card sat empty - which is what made
+       tiles show up blank on a cold load.  The probe now exists only to catch
+       a 404 and fall back to the swatch. */
+    node.style.backgroundImage = 'url(' + primary + ')';
     var probe = new Image();
-    probe.onload = function () {
-      node.style.backgroundImage = 'url(' + primary + ')';
-    };
     probe.onerror = function () {
       Debug.log('ASSET FAIL  ' + primary + '  -> placeholder');
       node.style.backgroundImage = 'url(' + placeholderUrl(style) + ')';
@@ -114,8 +117,17 @@ var Screens = (function () {
         spinOk[entry.style.id] = true;
         if (selectedId !== entry.style.id || cardSpin) return;
         entry.thumb.__style = entry.style;
-        entry.thumb.style.backgroundImage = 'none';
-        var tt = Anim.Turntable(entry.thumb, { thumbScale: true });
+        /* Keep the static thumbnail showing until the sheet is actually
+           painted, then drop it in the same frame.  Clearing it up front left
+           the tile empty for as long as the sheet took to decode, which read as
+           the head vanishing on tap.  The thumbnail IS frame 0 of the sheet, so
+           the hand-over is invisible - and it has to happen, because a static
+           thumbnail left underneath would peek out from behind the rotating
+           silhouette. */
+        var tt = Anim.Turntable(entry.thumb, {
+          thumbScale: true,
+          onReady: function () { entry.thumb.style.backgroundImage = 'none'; }
+        });
         tt.setStyle(entry.style);
         tt.start();
         cardSpin = { spin: tt, host: entry.thumb };
@@ -158,7 +170,22 @@ var Screens = (function () {
     /* The card keeps spinning behind a hidden screen otherwise - wasted work on
        an A5, and it blows the attract loop's two-layer budget. */
     function pauseSpin() { if (cardSpin) cardSpin.spin.stop(); }
-    function resumeSpin() { if (cardSpin && !Anim.reduced) cardSpin.spin.start(); }
+
+    /* reset() tears the turntable down, so by the time the attract loop or a
+       return from the completion screen resumes, there is nothing left to
+       restart - the card would sit still for the rest of the session.  Rebuild
+       it when that has happened. */
+    function resumeSpin() {
+      if (Anim.reduced) return;
+      if (cardSpin) { cardSpin.spin.start(); return; }
+      var i;
+      for (i = 0; i < cards.length; i++) {
+        if (cards[i].style.id === selectedId && spinOk[selectedId] !== false) {
+          startCardSpin(cards[i]);
+          return;
+        }
+      }
+    }
 
     function getSelected() { return selectedId; }
 
@@ -785,7 +812,9 @@ var Screens = (function () {
       col.appendChild(again);
 
       host.appendChild(col);
-      spin = Anim.Turntable(figure);
+      spin = Anim.Turntable(figure, {
+        onReady: function () { figure.style.backgroundImage = 'none'; }
+      });
     }
 
     /* checkmark draws (500ms) -> one ring pulse -> the figure springs in */
@@ -793,6 +822,11 @@ var Screens = (function () {
       build();
       nameEl.innerHTML = '';
       nameEl.appendChild(document.createTextNode(style.name + ' HAIR'));
+      /* The 1700px hero sheet is ~11MB decoded and can still be arriving when
+         the figure springs in, which showed as a blank stage.  Stand the small
+         thumbnail in until the sheet paints; soft for a moment beats empty, and
+         when the sheet is already warm this is never seen. */
+      figure.style.backgroundImage = 'url(' + Assets.thumb(style) + ')';
       spin.setStyle(style);
 
       tickPath.setAttribute('stroke-dashoffset', String(TICK_LEN));

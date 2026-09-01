@@ -515,3 +515,11 @@
 }
 
 .s3-col .btn-wrap { margin-bottom: 14px; }
+
+/* The completion figure carries the small thumbnail as a stand-in while the
+   hero sheet loads; Anim.Turntable clears it the frame the sheet paints. */
+.done-figure {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}

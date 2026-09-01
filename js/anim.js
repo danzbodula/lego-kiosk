@@ -139,6 +139,8 @@ var Anim = (function () {
     var grid = 4;          // the sheet is grid x grid cells
     var idx = 0, timer = null, speed = 0;
     var warm = null;       // the one Image ref that keeps the sheet decoded
+    var ready = false;     // has the sheet actually loaded?
+    var wantStart = false, pendingSpeed = 0;
 
     /* A per-cent background-position puts the image's P% point over the box's
        P% point, so with the sheet scaled to grid*100% the cells land exactly on
@@ -150,19 +152,33 @@ var Anim = (function () {
     }
 
     /* Assets owns the shape of the sequence: a true 360 loop for the renders,
-       a rock through four angles for photography and the swatches. */
+       a rock through four angles for photography and the swatches.
+     *
+     * The sheet is NOT painted until it has loaded.  Assigning a
+     * background-image that is not yet decoded paints an empty box, and on a
+     * 512MB device that window is long enough to see - it was why cards went
+     * blank when tapped and why the completion figure sprang in empty.
+     * Callers pass onReady to swap away whatever placeholder they were showing;
+     * because the two style changes land in the same paint, there is no gap. */
     function setStyle(style) {
       stop();
+      ready = false;
       var sheet = Assets.sprite(style, !!tOpts.thumbScale);
       grid = sheet.grid;
       seq = sheet.seq;
       idx = 0;
-      strip.style.backgroundImage = 'url(' + sheet.url + ')';
-      strip.style.backgroundSize = (grid * 100) + '% ' + (grid * 100) + '%';
-      place(seq[0]);
-      warm = new Image();                          // hold it against eviction
-      Debug.trackImage(sheet.url, warm);
-      warm.src = sheet.url;
+      var img = new Image();                       // also holds it against eviction
+      Debug.trackImage(sheet.url, img);
+      img.onload = function () {
+        strip.style.backgroundImage = 'url(' + sheet.url + ')';
+        strip.style.backgroundSize = (grid * 100) + '% ' + (grid * 100) + '%';
+        place(seq[0]);
+        ready = true;
+        if (tOpts.onReady) tOpts.onReady();
+        if (wantStart) run(pendingSpeed);
+      };
+      img.src = sheet.url;
+      warm = img;
     }
 
     function step() {
@@ -170,20 +186,31 @@ var Anim = (function () {
       place(seq[idx]);
     }
 
+    function run(ms) {
+      if (timer) window.clearInterval(timer);
+      timer = window.setInterval(step, ms);
+    }
+
+    /* Starting before the sheet has loaded would step background-position on an
+       empty element, so the request is remembered and honoured on load. */
     function start(ms) {
       stop();
       speed = ms || (window.DPT_CONFIG && DPT_CONFIG.SPIN_SPEED) || 260;
       if (reduced) return;                         // no spin under reduced motion
-      timer = window.setInterval(step, speed);
+      wantStart = true;
+      pendingSpeed = speed;
+      if (ready) run(speed);
     }
 
     function stop() {
+      wantStart = false;
       if (timer) { window.clearInterval(timer); timer = null; }
     }
 
     function destroy() {
       stop();
-      warm = null;
+      ready = false;
+      if (warm) { warm.onload = null; warm = null; }
       if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
     }
 
