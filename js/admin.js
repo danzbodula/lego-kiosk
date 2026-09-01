@@ -504,6 +504,7 @@ var Admin = (function () {
   return {
     boot: boot, show: show, hide: hide, consume: consume,
     isOpen: function () { return open; },
+    builds: function () { return buildsToday; },
     isPaused: function () { return paused; },
     setRobotStatus: function (s) { robotText = s || 'READY'; refresh(); },
     noteError: function (m) { lastError = m || 'unknown'; refresh(); },

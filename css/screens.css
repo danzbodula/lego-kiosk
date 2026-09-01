@@ -523,3 +523,51 @@
   background-position: center center;
   background-size: contain;
 }
+
+/* --- attract: the range of styles, and one moving pip ---------------------
+ *
+ * The row sits in the 100px of dead space between the sub-line and TAP TO
+ * START.  Chips are the 128px stills drawn at 64 - sharp, and static, so they
+ * add no composited layers.  All the motion is the single pip, which is why
+ * the attract loop still fits its two-layer budget with room to spare.
+ * ----------------------------------------------------------------------- */
+.attract-row {
+  position: absolute;
+  top: 748px;
+  left: 0; right: 0;
+  height: 76px;
+}
+
+.attract-chip {
+  position: absolute;
+  top: 0;
+  background-repeat: no-repeat;
+  background-position: center center;
+  /* Full strength on purpose.  Dimming these turned BLACK and CURLY into grey,
+     which misrepresents the part a visitor is about to choose - and the pip
+     already supplies all the emphasis the row needs. */
+}
+
+.attract-pip {
+  position: absolute;
+  top: 70px;
+  width: 34px;
+  height: 3px;
+  border-radius: 2px;
+  background: #7E001B;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transition: -webkit-transform 460ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 460ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.attract-count {
+  position: absolute;
+  top: 920px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  color: #8E8E93;
+}

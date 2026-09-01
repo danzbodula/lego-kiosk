@@ -78,12 +78,86 @@ var App = (function () {
     tap.className = 'attract-tap';
     tap.appendChild(document.createTextNode('TAP TO START'));
 
+    /* Every style, laid out from the manifest so a ninth needs no code here.
+       Answers "what can I get?" before anyone touches anything - which is the
+       one question the attract loop should be answering.  These are the 128px
+       stills, so the whole row costs about half a megabyte decoded and adds no
+       animating layers; the motion comes from the single pip below it. */
+    var n = HAIR_STYLES.length;
+    var GAP = 16, AVAIL = 688;
+    var cell = Math.min(64, Math.floor((AVAIL - (n - 1) * GAP) / n));
+    var span = n * cell + (n - 1) * GAP;
+    var left = Math.round((768 - span) / 2);
+
+    var row = document.createElement('div');
+    row.className = 'attract-row';
+    var i, pips = [];
+    for (i = 0; i < n; i++) {
+      var t = document.createElement('div');
+      t.className = 'attract-chip';
+      t.style.left = (left + i * (cell + GAP)) + 'px';
+      t.style.width = cell + 'px';
+      t.style.height = cell + 'px';
+      t.style.backgroundImage = 'url(' + Assets.thumb(HAIR_STYLES[i]) + ')';
+      t.style.backgroundSize = cell + 'px ' + cell + 'px';
+      row.appendChild(t);
+      pips.push(left + i * (cell + GAP) + Math.round((cell - 34) / 2));
+    }
+
+    /* One element, moved by transform - the eye follows it along the row and
+       reads the whole range on the way.  Driven from JS rather than keyframes
+       so the stops come from the manifest instead of being hard-coded. */
+    var pip = document.createElement('div');
+    pip.className = 'attract-pip';
+    pip.style.left = '0px';
+    row.appendChild(pip);
+
+    var count = document.createElement('div');
+    count.className = 'attract-count';
+
     attractEl.appendChild(logo);
     attractEl.appendChild(stage);
     attractEl.appendChild(title);
     attractEl.appendChild(sub);
+    attractEl.appendChild(row);
     attractEl.appendChild(tap);
+    attractEl.appendChild(count);
     attractEl.stageNode = stage;
+    attractEl.pipNode = pip;
+    attractEl.pipStops = pips;
+    attractEl.countNode = count;
+  }
+
+  /* The pip walks the row while the attract loop is up, and only then. */
+  var pipTimer = null, pipAt = 0;
+
+  function startPip() {
+    stopPip();
+    var stops = attractEl.pipStops, pip = attractEl.pipNode;
+    if (!stops || !stops.length) return;
+    function move() {
+      pip.style.webkitTransform = 'translate3d(' + stops[pipAt] + 'px,0,0)';
+      pip.style.transform = 'translate3d(' + stops[pipAt] + 'px,0,0)';
+      pipAt = (pipAt + 1) % stops.length;
+    }
+    move();
+    pipTimer = window.setInterval(move, 1100);
+  }
+
+  function stopPip() {
+    if (pipTimer) { window.clearInterval(pipTimer); pipTimer = null; }
+  }
+
+  /* Quiet social proof.  Hidden until there are enough to be worth saying -
+     "0 BUILT TODAY" would work against us. */
+  function refreshCount() {
+    var el = attractEl.countNode;
+    if (!el) return;
+    var n = (window.Admin && Admin.builds) ? Admin.builds() : 0;
+    el.innerHTML = '';
+    if (n < 5) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.appendChild(document.createTextNode(n + ' BUILT TODAY'));
   }
 
   function showAttract() {
@@ -93,6 +167,8 @@ var App = (function () {
     // built fresh each time and destroyed on dismiss, so the idle loop never
     // holds textures while somebody is actually using the kiosk
     Screens.Screen1.pauseSpin();
+    startPip();
+    refreshCount();
     attractSpin = Anim.Turntable(attractEl.stageNode);
     attractSpin.setStyle(styleById(Screens.Screen1.getSelected()));
     attractSpin.start(DPT_CONFIG.SPIN_SPEED_ATTRACT);
@@ -104,6 +180,7 @@ var App = (function () {
   function hideAttract() {
     if (!attractOn) return;
     attractOn = false;
+    stopPip();
     Anim.addClass(attractEl, 'is-leaving');
     Anim.removeClass(attractEl, 'is-on');
     Anim.removeClass(document.getElementById('app'), 'is-dimmed');
