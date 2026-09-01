@@ -33,7 +33,16 @@ var App = (function () {
   }
 
   function preloadStyle(style) { warmFrames = preload(style, true); }
-  function preloadHero(style) { heroFrames = preload(style, false); }
+
+  /* The still is tiny and must be ready before the completion screen springs
+     in, so it is warmed alongside the sheet it stands in for. */
+  function preloadHero(style) {
+    heroFrames = preload(style, false);
+    var s = new Image();
+    Debug.trackImage(Assets.still(style), s);
+    s.src = Assets.still(style);
+    heroFrames.push(s);
+  }
 
   /* --- selection ---------------------------------------------------------- */
 

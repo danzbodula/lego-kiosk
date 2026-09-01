@@ -142,6 +142,7 @@ var Anim = (function () {
     var ready = false;     // has the sheet actually loaded?
     var wantStart = false, pendingSpeed = 0;
     var token = 0;         // guards against a superseded sheet arriving late
+    var stillHeld = false; // is a caller's still image still covering for us?
 
     /* A per-cent background-position puts the image's P% point over the box's
        P% point, so with the sheet scaled to grid*100% the cells land exactly on
@@ -172,6 +173,7 @@ var Anim = (function () {
          onload stops the common case, the token covers any ordering the
          browser chooses. */
       var mine = ++token;
+      stillHeld = true;
       if (warm) { warm.onload = null; warm = null; }
       var sheet = Assets.sprite(style, !!tOpts.thumbScale);
       grid = sheet.grid;
@@ -191,16 +193,30 @@ var Anim = (function () {
         strip.style.backgroundSize = (grid * 100) + '% ' + (grid * 100) + '%';
         place(seq[0]);
         ready = true;
-        if (tOpts.onReady) tOpts.onReady();
+        /* Deliberately NOT releasing the caller's still here.  onload means
+           downloaded, not decoded - Safari decodes lazily at paint time, and a
+           1700px sheet is 2.9M pixels.  Clearing the still now and asking for
+           the decode afterwards is exactly the gap that made the head vanish.
+           releaseStill() waits for proof instead: the first frame step. */
         if (wantStart) run(pendingSpeed);
       };
       img.src = sheet.url;
       warm = img;
     }
 
+    /* Called once the sheet has demonstrably painted, so whatever the caller
+       was showing underneath can go.  Because a still is cell 0 of this very
+       sheet, the overlap before this point is invisible however long it runs. */
+    function releaseStill() {
+      if (!stillHeld) return;
+      stillHeld = false;
+      if (tOpts.onReady) tOpts.onReady();
+    }
+
     function step() {
       idx = (idx + 1) % seq.length;
       place(seq[idx]);
+      releaseStill();                              // a frame moved: it is live
     }
 
     function run(ms) {

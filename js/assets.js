@@ -59,6 +59,14 @@ var Assets = (function () {
     return v(dir() + style.id + '/front.png');
   }
 
+  /* Cell 0 of the hero sheet, at hero cell resolution.  Pixel-identical to the
+     turntable's first frame, so it can overlap the live sheet for as long as
+     the decode takes without a visible seam. */
+  function still(style) {
+    if (usePlaceholders()) return placeholder(style);
+    return v(dir() + style.id + '/still.png');
+  }
+
   /* The turntable's sprite sheet: ONE texture holding every frame in a grid.
      Returns { url, grid, seq } where seq is the order of cell indices to
      cycle. Renders ship 16 frames in a 4x4 and loop a true 360; photography
@@ -87,6 +95,6 @@ var Assets = (function () {
   }
 
   return { frame: frame, thumb: thumb, thumbFrame: thumbFrame, placeholder: placeholder,
-           sprite: sprite, hero: hero,
+           sprite: sprite, still: still, hero: hero,
            usePlaceholders: usePlaceholders, source: source };
 })();

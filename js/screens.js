@@ -113,7 +113,9 @@ var Screens = (function () {
       var img = new Image();
       img.onload = img.onerror = function () {
         host.style.backgroundImage = 'url(' + url + ')';
-        spin.destroy();
+        // give the restored thumbnail a frame to paint before the strip that
+        // is currently covering it is taken away
+        window.setTimeout(function () { spin.destroy(); }, 80);
       };
       img.src = url;
     }
@@ -841,11 +843,11 @@ var Screens = (function () {
       build();
       nameEl.innerHTML = '';
       nameEl.appendChild(document.createTextNode(style.name + ' HAIR'));
-      /* The 1700px hero sheet is ~11MB decoded and can still be arriving when
-         the figure springs in, which showed as a blank stage.  Stand the small
-         thumbnail in until the sheet paints; soft for a moment beats empty, and
-         when the sheet is already warm this is never seen. */
-      figure.style.backgroundImage = 'url(' + Assets.thumb(style) + ')';
+      /* The still is cell 0 of the hero sheet at its own cell resolution, so it
+         is indistinguishable from the turntable's first frame.  It holds the
+         figure from the moment it springs in until the sheet has provably
+         painted - however long that decode takes. */
+      figure.style.backgroundImage = 'url(' + Assets.still(style) + ')';
       spin.setStyle(style);
 
       tickPath.setAttribute('stroke-dashoffset', String(TICK_LEN));

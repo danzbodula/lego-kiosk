@@ -20,7 +20,7 @@ var DPT_CONFIG = {
   // Bumped by bust.py. Appended to every image URL so a Safari cache entry
   // created before the no-store headers existed cannot keep serving a stale
   // frame - changing the URL is the one thing the cache cannot ignore.
-  ASSET_VERSION: '1788289422',
+  ASSET_VERSION: '1788289914',
 
   // Where the hair art comes from.  One word switches the whole app.
   //   'render'      assets/hair-render/  - rendered from the real LDraw part
