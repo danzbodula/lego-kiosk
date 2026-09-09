@@ -14,7 +14,7 @@
   width: 768px;
   height: 1004px;            /* js/fit.js overwrites this from the viewport */
   overflow: hidden;
-  background: #FAFAFA;
+  background: #F2F2F7;
 
   /* Scale about the top-left; fit.js translates the box into place itself. */
   -webkit-transform-origin: 0 0;
@@ -34,7 +34,7 @@
 html, body {
   /* The letterbox around the canvas, on the rare geometry that has one.
      Same value as the app background, so the seam is invisible. */
-  background: #FAFAFA;
+  background: #F2F2F7;
 
   /* Chromium's answer to rubber-banding.  The touchmove handler in
      fastclick.js covers older engines; this covers this one without needing

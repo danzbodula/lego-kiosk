@@ -29,7 +29,7 @@
 .s1-col {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  padding: 28px 0;
+  padding: 32px 0;
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;
@@ -42,15 +42,34 @@
   flex: 0 0 auto;
 }
 
+/* 8pt rhythm between the header elements. */
 .s1-col .s1-logo   { margin-bottom: 24px; }
-.s1-col .stepper   { margin-bottom: 28px; }
-.s1-col .headline  { margin-bottom: 24px; }
-.s1-col .btn-wrap  { margin-bottom: 14px; }
+.s1-col .stepper   { margin-bottom: 32px; }
+.s1-col .headline  { margin-bottom: 28px; }
+.s1-col .btn-wrap  { margin-bottom: 16px; }
+
+/* THE flexible element on screen 1.  See the note on .hair-grid in
+   components.css: the grid absorbs the canvas slack so the cards grow,
+   instead of it pooling in a dead gap above the button. */
+.s1-col .hair-grid {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
 
 .s1-spacer {
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
   min-height: 16px;
+}
+
+/* On screen 1 the spacer is now only the gap between the grid and the button;
+   the grid took its old job. */
+.s1-col .s1-spacer {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  height: 28px;
+  min-height: 28px;
 }
 
 /* --- attract / idle overlay -------------------------------------------- */
@@ -63,7 +82,7 @@
      attract state, but with a full grid behind it the dimmed logo ghosts a
      second copy right next to the attract logo, which reads as a rendering
      bug. #app is still dimmed underneath - this is just a clean ground. */
-  background: #FAFAFA;
+  background: #F2F2F7;
   z-index: 500;
   visibility: hidden;
   opacity: 0;
@@ -101,9 +120,9 @@
   right: 0;
   font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
                "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
-  font-size: 40px;
+  font-size: 46px;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: -0.8px;
   color: #7E001B;
 }
 
@@ -112,10 +131,10 @@
   top: 71.12%;             /* 714 / 1004 */
   left: 0;
   right: 0;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #48484A;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #6C6C70;
 }
 
 .attract-tap {
@@ -123,9 +142,9 @@
   top: 83.47%;             /* 838 / 1004 */
   left: 0;
   right: 0;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 3px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
   color: #1C1C1E;
 }
 
@@ -292,9 +311,10 @@
 .chip.is-selected .chip-label { color: #7E001B; }
 
 /* .s1b-col > * (flex: 0 0 auto) is declared after .s1-spacer and has equal
-   specificity, so the spacer needs its flex restored explicitly here. */
-.s1b-col .s1-spacer,
-.s1-col .s1-spacer {
+   specificity, so the spacer needs its flex restored explicitly here.
+   Layout A is deliberately NOT in this list any more - on screen 1 the grid
+   is the flexible element and its spacer is a fixed 28px gap. */
+.s1b-col .s1-spacer {
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
 }
@@ -310,7 +330,7 @@
 .s2-col, .s3-col {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  padding: 28px 0;
+  padding: 32px 0;
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;
@@ -322,14 +342,79 @@
   flex: 0 0 auto;
 }
 
-.s2-col .s1-badge, .s3-col .s1-badge { margin-bottom: 20px; }
-.s2-col .stepper, .s3-col .stepper   { margin-bottom: 28px; }
-.s2-col .headline, .s3-col .headline { margin-bottom: 24px; }
+.s2-col .s1-badge, .s3-col .s1-badge { margin-bottom: 22px; }
+.s2-col .stepper, .s3-col .stepper   { margin-bottom: 32px; }
+.s2-col .headline, .s3-col .headline { margin-bottom: 32px; }
 
+/* Screens 2 and 3 used a flexible spacer above AND below their content, which
+   on a tall tablet opened a ~156px void at each end - the "plenty of space
+   around the screen" this fixes.  The spacers are now fixed gaps, and the
+   screen's hero element takes the slack instead (see the two rules below),
+   centring itself in whatever room it is given.  Same principle as the hair
+   grid on screen 1: give the space to the content, not to a hole. */
 .s2-col .s1-spacer, .s3-col .s1-spacer {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  height: 20px;
+  min-height: 20px;
+}
+
+/* The build badge keeps its exact 480px artwork - it is the one element on
+   this screen that must not change - but its BOX absorbs the slack and centres
+   the badge inside it. */
+.s2-col .build-stage {
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
-  min-height: 16px;
+  height: auto;
+  min-height: 480px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+}
+
+/* Likewise the completion figure: the stage grows, and its absolutely
+   positioned children centre against it (see .done-figure / .done-badge). */
+.s3-col .done-stage {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 430px;
+}
+
+/* "Auburn hair" - a capsule naming what the arm is building.  An iOS chip:
+   content-width, fully rounded, white on the grouped ground. */
+.build-chip {
+  -webkit-align-self: center;
+  align-self: center;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  height: 84px;
+  margin-bottom: 26px;
+  padding: 0 30px 0 10px;
+  background: #FFFFFF;
+  border-radius: 42px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.build-chip-thumb {
+  width: 64px;
+  height: 64px;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+}
+
+.build-chip-name {
+  margin-left: 14px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #1C1C1E;
 }
 
 .build-stage {
@@ -353,7 +438,7 @@
 
 .stage-label {
   position: relative;
-  height: 32px;
+  height: 38px;
   margin-bottom: 10px;
 }
 
@@ -361,31 +446,31 @@
 .stage-line {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 32px;
-  line-height: 32px;
+  height: 38px;
+  line-height: 38px;
   text-align: center;
-  font-size: 19px;
+  font-size: 23px;
   font-weight: 600;
-  letter-spacing: 0.4px;
+  letter-spacing: -0.2px;
   color: #1C1C1E;
   opacity: 0;
 }
 
 .build-pct {
-  height: 44px;
-  line-height: 44px;
+  height: 68px;
+  line-height: 68px;
   text-align: center;
-  font-size: 38px;
+  font-size: 60px;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: -1.5px;
   color: #7E001B;
 }
 
 .build-note {
-  height: 20px;
-  line-height: 20px;
+  height: 24px;
+  line-height: 24px;
   text-align: center;
-  font-size: 15px;
+  font-size: 17px;
   color: #8E8E93;
 }
 
@@ -395,7 +480,7 @@
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   padding: 28px 0;
-  background: #FAFAFA;
+  background: #F2F2F7;
   opacity: 0;
   visibility: hidden;
   display: -webkit-flex;
@@ -429,7 +514,7 @@
 .err-mark svg { margin: 26px 0 0 36px; }
 
 .err-title {
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 800;
   letter-spacing: -0.5px;
   color: #7E001B;
@@ -438,7 +523,7 @@
 .err-msg {
   margin-top: 14px;
   padding: 0 74px;
-  font-size: 17px;
+  font-size: 19px;
   line-height: 1.5;
   color: #48484A;
 }
@@ -449,17 +534,21 @@
 
 .done-stage {
   position: relative;
-  width: 420px;
-  height: 430px;
-  margin: 0 auto 14px auto;
+  width: 460px;
+  height: 440px;
+  margin: 0 auto 18px auto;
 }
 
+/* Centred on the stage's own height, which now flexes - see .s3-col
+   .done-stage.  Centring with a margin rather than a translate keeps the
+   scale-in animation in animations.css working untouched. */
 .done-figure {
   position: absolute;
-  top: 18px;
-  left: 6px;
-  width: 344px;
-  height: 344px;
+  top: 50%;
+  left: 20px;
+  width: 372px;
+  height: 372px;
+  margin-top: -186px;
   opacity: 0;
   -webkit-transform: scale(0.82);
   transform: scale(0.82);
@@ -475,18 +564,19 @@
    covered by the badge */
 .done-badge {
   position: absolute;
-  top: 52px;
-  left: 322px;
-  width: 92px;
-  height: 92px;
+  top: 50%;
+  left: 348px;
+  width: 100px;
+  height: 100px;
+  margin-top: -152px;      /* keeps its original offset above the figure */
 }
 
 .done-badge-disc {
   position: absolute;
   top: 0; left: 0;
-  width: 92px;
-  height: 92px;
-  border-radius: 46px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
   background: #7E001B;
 }
 
@@ -494,20 +584,20 @@
 .done-pulse {
   position: absolute;
   top: 0; left: 0;
-  width: 92px;
-  height: 92px;
-  border-radius: 46px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
   border: 3px solid #7E001B;
   opacity: 0;
 }
 
 .done-name {
-  height: 34px;
-  line-height: 34px;
+  height: 40px;
+  line-height: 40px;
   text-align: center;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: -0.3px;
   color: #1C1C1E;
 }
 
@@ -515,7 +605,7 @@
   height: 22px;
   line-height: 22px;
   text-align: center;
-  font-size: 16px;
+  font-size: 18px;
   color: #48484A;
 }
 
@@ -576,21 +666,24 @@
   top: 91.63%;             /* 920 / 1004 */
   left: 0; right: 0;
   text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1.6px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: #8E8E93;
 }
 
 /* The caption under the percentage.  Secondary label grey at caption weight -
    present when you look for it, invisible when you are watching the arm. */
 .build-remain {
-  height: 22px;
-  line-height: 22px;
+  height: 26px;
+  line-height: 26px;
   margin-top: 2px;
   text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: #8E8E93;
 }
+
+/* Breathing room between the style name and the primary action. */
+.s3-col .done-name { margin-bottom: 8px; }

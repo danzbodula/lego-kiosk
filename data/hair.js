@@ -37,44 +37,44 @@
  * ------------------------------------------------------------------------ */
 
 var HAIR_STYLES = [
-  { id: 'brown',  name: 'BROWN',  color: '#582A12',
+  { id: 'brown',  name: 'Brown',  color: '#582A12',
     element: '6438262', design: '103748pb01',
     part: 'Hair Swept Left with Side Part, Molded Cochlear Implant',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'blonde', name: 'BLONDE', color: '#E4CD9E',
+  { id: 'blonde', name: 'Blonde', color: '#E4CD9E',
     element: '6093519', design: '87991',
     part: 'Hair Tousled with Side Part',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'auburn', name: 'AUBURN', color: '#582A12',
+  { id: 'auburn', name: 'Auburn', color: '#582A12',
     element: '6123038', design: '21268',
     part: 'Hair Short Swept Back with Sideburns and Widow\'s Peak',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'ginger', name: 'GINGER', color: '#A95500',
+  { id: 'ginger', name: 'Ginger', color: '#A95500',
     element: '6310817', design: '36037',
     part: 'Hair Female Mid-Length Combed Behind Ear',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'long',   name: 'LONG',   color: '#582A12',
+  { id: 'long',   name: 'Long',   color: '#582A12',
     element: '4506003', design: '59363',
     part: 'Hair Female Mid-Length with Braid Around Sides',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'black',  name: 'BLACK',  color: '#05131D',
+  { id: 'black',  name: 'Black',  color: '#05131D',
     element: '4653226', design: '99930',
     part: 'Hair Short Combed Sideways Part Left',
     angles: ['front', 'front45', 'side', 'back'] },
 
   // NB: a Friends mini-doll mould, not a standard minifigure part - it fits the
   // minifigure head fine, but order it by element ID, not by browsing minifig hair.
-  { id: 'curly',  name: 'CURLY',  color: '#05131D',
+  { id: 'curly',  name: 'Curly',  color: '#05131D',
     element: '6409770', design: '2646',
     part: 'Mini Doll Hair Short with Curls and Pompadour',
     angles: ['front', 'front45', 'side', 'back'] },
 
-  { id: 'cap',    name: 'CAP',    color: '#C91A09',
+  { id: 'cap',    name: 'Cap',    color: '#C91A09',
     element: '6032178', design: '11303',
     part: 'Headgear Cap - Short Curved Bill with Seams and Hole on Top',
     angles: ['front', 'front45', 'side', 'back'] }

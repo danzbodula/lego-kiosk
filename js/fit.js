@@ -55,7 +55,14 @@ var Fit = (function () {
 
   var DESIGN_W = 768;    // the authored canvas width  - never changes
   var DESIGN_H = 1004;   // the authored canvas height - the minimum
-  var MAX_H    = 1240;   // stop stretching past this many design px
+  /* Stop stretching past this many design px - about 12% taller than the
+     canvas was composed at.  Screen 1 absorbs slack happily (the hair grid
+     grows), but screens 2 and 3 are hero-plus-caption compositions with no
+     elastic element: past this the badge and the finished minifigure start
+     floating in space rather than sitting in a layout.  The cost is ~38px of
+     letterbox at each end on the Fire HD 8, in the page's own background
+     colour, which reads as bezel rather than as a gap. */
+  var MAX_H    = 1120;
 
   var stage = null;
   var scale = 1;

@@ -484,7 +484,7 @@ var Screens = (function () {
     '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">' +
     '  <!-- Rainbow Robotics cobot, drawn from the booth cell photo: light grey' +
     '       tubular links with dark joint shrouds, not a charcoal industrial arm.' +
-    '       Outlined so the light body still reads on the #FAFAFA ground. -->' +
+    '       Outlined so the light body still reads on the #F2F2F7 ground. -->' +
     '  <g stroke-linecap="round" stroke-linejoin="round" fill="none">' +
     '' +
     '    <!-- link outlines -->' +
@@ -559,7 +559,7 @@ var Screens = (function () {
      COLLECT FROM THE TRAY.  So the stepper reads as a map of the flow rather
      than as decoration, and somebody walking up to the kiosk learns the whole
      interaction from it without being told. */
-  var STEP_NAMES = ['CHOOSE', 'BUILD', 'COLLECT'];
+  var STEP_NAMES = ['Choose', 'Build', 'Collect'];
 
   /* states: array of 'done' | 'active' | '' per step */
   function buildStepper(states) {
@@ -629,6 +629,7 @@ var Screens = (function () {
 
   var Screen2 = (function () {
     var host, ringFill, pctEl, remainEl, lineA, lineB, lineTop, errBox, errMsg, armWrap;
+    var chipThumb, chipName;         // the "what am I building" row
     var remainShown = null;          // seconds currently on screen
     var C = 0;                       // ring circumference
     var built = false;
@@ -647,7 +648,17 @@ var Screens = (function () {
       // A spacer above as well as below centres the whole block optically.
       col.appendChild(el('div', 's1-spacer'));
       col.appendChild(buildStepper(['done', 'active', '']));
-      col.appendChild(buildHeadline('BUILDING YOUR', 'MINIFIGURE'));
+      col.appendChild(buildHeadline('Building your', 'Minifigure'));
+
+      /* What is actually being built.  The screen never used to say, which
+         left the one question a waiting visitor has - "is it making MINE?" -
+         unanswered, and left a void where this now sits. */
+      var chip = el('div', 'build-chip');
+      chipThumb = el('div', 'build-chip-thumb');
+      chipName = el('div', 'build-chip-name');
+      chip.appendChild(chipThumb);
+      chip.appendChild(chipName);
+      col.appendChild(chip);
 
       var stage = el('div', 'build-stage');
       var R = 118, CX = 180;
@@ -709,14 +720,14 @@ var Screens = (function () {
       errBox.appendChild(mark);
 
       var et = el('div', 'err-title');
-      et.appendChild(document.createTextNode('BUILD PAUSED'));
+      et.appendChild(document.createTextNode('Build paused'));
       errMsg = el('div', 'err-msg');
       errBox.appendChild(et);
       errBox.appendChild(errMsg);
 
       errBox.appendChild(el('div', 's1-spacer'));
 
-      var retry = buildButton('START OVER', 'btn-primary');
+      var retry = buildButton('Start over', 'btn-primary');
       Tap.bind(retry.btn, {
         press: function () { Anim.addClass(retry.btn, 'is-pressed'); },
         release: function () { Anim.removeClass(retry.btn, 'is-pressed'); },
@@ -758,8 +769,8 @@ var Screens = (function () {
       if (remainShown === null || target < remainShown) remainShown = target;
 
       var txt = '';
-      if (p < 100) txt = (remainShown <= 3) ? 'ALMOST DONE'
-                                            : 'ABOUT ' + remainShown + ' SECONDS';
+      if (p < 100) txt = (remainShown <= 3) ? 'Almost done'
+                                            : 'About ' + remainShown + ' seconds';
       if (remainEl.__txt === txt) return;         // no needless repaint
       remainEl.__txt = txt;
       remainEl.innerHTML = '';
@@ -802,8 +813,17 @@ var Screens = (function () {
 
     function complete() { App.goDone(); }
 
+    /* Told by app.js when a build starts, so the chip can name the style. */
+    function setStyle(style) {
+      build();
+      if (!style || !chipThumb) return;
+      chipThumb.style.backgroundImage = 'url(' + Assets.thumb(style) + ')';
+      chipName.innerHTML = '';
+      chipName.appendChild(document.createTextNode(style.name + ' hair'));
+    }
+
     return {
-      build: build, setProgress: setProgress, reset: reset,
+      build: build, setProgress: setProgress, reset: reset, setStyle: setStyle,
       error: error, complete: complete, STAGES: STAGES
     };
   })();
@@ -824,7 +844,7 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-badge'));
       col.appendChild(buildStepper(['done', 'done', 'active']));
-      col.appendChild(buildHeadline('YOUR MINIFIGURE IS', 'READY', 'COLLECT FROM THE TRAY'));
+      col.appendChild(buildHeadline('Your minifigure is', 'Ready', 'Collect it from the tray'));
 
       var stage = el('div', 'done-stage');
       figure = el('div', 'done-figure');
@@ -849,7 +869,7 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-spacer'));
 
-      var again = buildButton('BUILD ANOTHER', 'btn-primary');
+      var again = buildButton('Build another', 'btn-primary');
       Tap.bind(again.btn, {
         press: function () { Anim.addClass(again.btn, 'is-pressed'); },
         release: function () { Anim.removeClass(again.btn, 'is-pressed'); },
@@ -873,7 +893,7 @@ var Screens = (function () {
     function prepare(style) {
       build();
       nameEl.innerHTML = '';
-      nameEl.appendChild(document.createTextNode(style.name + ' HAIR'));
+      nameEl.appendChild(document.createTextNode(style.name + ' hair'));
       /* The still is cell 0 of the hero sheet at its own cell resolution, so it
          is indistinguishable from the turntable's first frame.  It holds the
          figure from the moment it springs in until the sheet has provably
@@ -885,19 +905,43 @@ var Screens = (function () {
       Anim.removeClass(pulse, 'is-pulsing');
       Anim.removeClass(figure, 'is-in');
       Anim.reflow(tickPath);
+
+      /* Spring the figure in HERE, during prepare, not in show().
+         show() runs in the push's completion callback - 380ms after the screen
+         starts sliding - and the spring itself is another 420ms, so the
+         minifigure was not fully on screen until ~800ms after the done screen
+         began arriving.  For most of that the visitor was looking at a
+         checkmark next to an empty box, which is the "blank for a second"
+         report.  The image itself was never the problem: it is warmed the
+         moment a style is picked (preloadStyle in app.js) and measurably
+         painted at t=0.
+         Reflowing between the remove and the add is what makes the spring run
+         rather than being coalesced away - so the figure animates in WHILE the
+         screen slides, and is simply there when it lands. */
+      Anim.reflow(figure);
+      Anim.addClass(figure, 'is-in');
       prepared = style.id;
     }
 
-    /* checkmark draws (500ms) -> one ring pulse -> the figure springs in */
+    /* The minifigure springs in FIRST, then the checkmark stamps it.
+     *
+     * This used to run the other way round - tick at 120ms, pulse at 640, and
+     * the figure not until 780 - which meant that after the 380ms screen
+     * transition the visitor spent well over a second looking at a checkmark
+     * floating beside an empty box.  It read as the image failing to load.
+     * It was never a loading problem (the still is warmed the moment a style
+     * is picked, see preloadStyle in app.js); it was the order.
+     *
+     * Showing the figure first is also the better story: you see YOUR
+     * minifigure, and then it gets approved. */
     function show(style) {
       if (prepared !== style.id) prepare(style);
 
-      window.setTimeout(function () { tickPath.setAttribute('stroke-dashoffset', '0'); }, 120);
-      window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 640);
-      window.setTimeout(function () {
-        Anim.addClass(figure, 'is-in');
-        spin.start();
-      }, 780);
+      // The figure is already in - prepare() brought it with the screen.
+      // All that is left is to set it turning and stamp it approved.
+      spin.start();
+      window.setTimeout(function () { tickPath.setAttribute('stroke-dashoffset', '0'); }, 60);
+      window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 420);
     }
 
     function stop() { if (spin) spin.stop(); }
