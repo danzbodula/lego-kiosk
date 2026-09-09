@@ -142,10 +142,10 @@
   top: 83.0%;              /* was 838/1004; rebalanced */
   left: 0;
   right: 0;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  color: #1C1C1E;
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #7E001B;
 }
 
 /* --- turntable stage --------------------------------------------------- */
@@ -518,6 +518,12 @@
   -webkit-flex-direction: column;
   flex-direction: column;
   text-align: center;
+}
+
+.err-gap {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  height: 104px;
 }
 
 .build-error > * {

@@ -710,7 +710,9 @@ var Screens = (function () {
 
       errBox = el('div', 'build-error');
       errBox.appendChild(el('div', 's1-badge'));
-      errBox.appendChild(el('div', 's1-spacer'));
+      // fixed, not flexible: two flexible spacers on this screen split the
+      // canvas slack into a void above the message and another below it
+      errBox.appendChild(el('div', 'err-gap'));
 
       var mark = el('div', 'err-mark');
       mark.innerHTML =
