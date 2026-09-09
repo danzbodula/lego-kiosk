@@ -217,7 +217,6 @@ var Screens = (function () {
       }
       var after = 190 + cards.length * 40;
       items.push({ el: document.getElementById('btn-wrap-select'), delay: after + 20 });
-      items.push({ el: document.getElementById('helper-select'),   delay: after + 55 });
       Anim.enter(items);
     }
 
@@ -229,8 +228,7 @@ var Screens = (function () {
         document.getElementById('logo-select'),
         document.getElementById('stepper-select'),
         document.getElementById('headline-select'),
-        document.getElementById('btn-wrap-select'),
-        document.getElementById('helper-select')
+        document.getElementById('btn-wrap-select')
       ];
       var i;
       for (i = 0; i < nodes.length; i++) {
@@ -318,7 +316,6 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-spacer'));
       col.appendChild(document.getElementById('btn-wrap-select'));
-      col.appendChild(document.getElementById('helper-select'));
 
       if (oldCol && oldCol.parentNode) oldCol.parentNode.removeChild(oldCol);
       host.appendChild(col);
@@ -444,7 +441,6 @@ var Screens = (function () {
       for (i = 0; i < chips.length; i++) items.push({ el: chips[i].chip, delay: 290 + i * 40 });
       var after = 290 + chips.length * 40;
       items.push({ el: document.getElementById('btn-wrap-select'), delay: after + 20 });
-      items.push({ el: document.getElementById('helper-select'),   delay: after + 55 });
       Anim.enter(items);
     }
 
@@ -454,8 +450,7 @@ var Screens = (function () {
         document.getElementById('stepper-select'),
         document.getElementById('headline-select'),
         hero, heroName,
-        document.getElementById('btn-wrap-select'),
-        document.getElementById('helper-select')
+        document.getElementById('btn-wrap-select')
       ];
       var i;
       for (i = 0; i < nodes.length; i++) {
@@ -559,7 +554,7 @@ var Screens = (function () {
      COLLECT FROM THE TRAY.  So the stepper reads as a map of the flow rather
      than as decoration, and somebody walking up to the kiosk learns the whole
      interaction from it without being told. */
-  var STEP_NAMES = ['Choose', 'Build', 'Collect'];
+  var STEP_NAMES = ['CHOOSE', 'BUILD', 'COLLECT'];
 
   /* states: array of 'done' | 'active' | '' per step */
   function buildStepper(states) {
@@ -599,14 +594,16 @@ var Screens = (function () {
     h.appendChild(b);
     // screens 2 and 3 carry the label device too, so the block still sums to
     // 140px and all three screens share one headline rhythm
-    var r = el('div', 'h-rule');
-    r.appendChild(el('span', 'rule-line'));
+    /* Only screens that HAVE a label get the rule.  Screen 2 passes none, and
+       used to get an empty 34px box under its title doing nothing. */
     if (label) {
+      var r = el('div', 'h-rule');
+      r.appendChild(el('span', 'rule-line'));
       var lt = el('span', 'rule-text');
       lt.appendChild(document.createTextNode(label));
       r.appendChild(lt);
+      h.appendChild(r);
     }
-    h.appendChild(r);
     return h;
   }
 
@@ -644,11 +641,14 @@ var Screens = (function () {
       host.innerHTML = '';
       var col = el('div', 's2-col');
 
-      // no header mark on this screen - the big badge in the middle IS the mark.
-      // A spacer above as well as below centres the whole block optically.
-      col.appendChild(el('div', 's1-spacer'));
+      /* No header mark on this screen - the big badge in the middle IS the
+         mark.  But screens 1 and 3 both put 80px of mark above the stepper,
+         so this screen reserves the same height rather than letting its
+         stepper ride 76px higher: the progress indicator has to hold still
+         while the visitor watches it advance. */
+      col.appendChild(el('div', 's2-head-pad'));
       col.appendChild(buildStepper(['done', 'active', '']));
-      col.appendChild(buildHeadline('Building your', 'Minifigure'));
+      col.appendChild(buildHeadline('BUILDING YOUR', 'MINIFIGURE'));
 
       /* What is actually being built.  The screen never used to say, which
          left the one question a waiting visitor has - "is it making MINE?" -
@@ -720,14 +720,14 @@ var Screens = (function () {
       errBox.appendChild(mark);
 
       var et = el('div', 'err-title');
-      et.appendChild(document.createTextNode('Build paused'));
+      et.appendChild(document.createTextNode('BUILD PAUSED'));
       errMsg = el('div', 'err-msg');
       errBox.appendChild(et);
       errBox.appendChild(errMsg);
 
       errBox.appendChild(el('div', 's1-spacer'));
 
-      var retry = buildButton('Start over', 'btn-primary');
+      var retry = buildButton('START OVER', 'btn-primary');
       Tap.bind(retry.btn, {
         press: function () { Anim.addClass(retry.btn, 'is-pressed'); },
         release: function () { Anim.removeClass(retry.btn, 'is-pressed'); },
@@ -769,8 +769,8 @@ var Screens = (function () {
       if (remainShown === null || target < remainShown) remainShown = target;
 
       var txt = '';
-      if (p < 100) txt = (remainShown <= 3) ? 'Almost done'
-                                            : 'About ' + remainShown + ' seconds';
+      if (p < 100) txt = (remainShown <= 3) ? 'ALMOST DONE'
+                                            : 'ABOUT ' + remainShown + ' SECONDS';
       if (remainEl.__txt === txt) return;         // no needless repaint
       remainEl.__txt = txt;
       remainEl.innerHTML = '';
@@ -819,7 +819,7 @@ var Screens = (function () {
       if (!style || !chipThumb) return;
       chipThumb.style.backgroundImage = 'url(' + Assets.thumb(style) + ')';
       chipName.innerHTML = '';
-      chipName.appendChild(document.createTextNode(style.name + ' hair'));
+      chipName.appendChild(document.createTextNode(style.name + ' HAIR'));
     }
 
     return {
@@ -844,7 +844,7 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-badge'));
       col.appendChild(buildStepper(['done', 'done', 'active']));
-      col.appendChild(buildHeadline('Your minifigure is', 'Ready', 'Collect it from the tray'));
+      col.appendChild(buildHeadline('YOUR MINIFIGURE IS', 'READY', 'COLLECT FROM THE TRAY'));
 
       var stage = el('div', 'done-stage');
       figure = el('div', 'done-figure');
@@ -869,7 +869,7 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-spacer'));
 
-      var again = buildButton('Build another', 'btn-primary');
+      var again = buildButton('BUILD ANOTHER', 'btn-primary');
       Tap.bind(again.btn, {
         press: function () { Anim.addClass(again.btn, 'is-pressed'); },
         release: function () { Anim.removeClass(again.btn, 'is-pressed'); },
@@ -893,7 +893,7 @@ var Screens = (function () {
     function prepare(style) {
       build();
       nameEl.innerHTML = '';
-      nameEl.appendChild(document.createTextNode(style.name + ' hair'));
+      nameEl.appendChild(document.createTextNode(style.name + ' HAIR'));
       /* The still is cell 0 of the hero sheet at its own cell resolution, so it
          is indistinguishable from the turntable's first frame.  It holds the
          figure from the moment it springs in until the sheet has provably

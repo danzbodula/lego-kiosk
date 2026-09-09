@@ -12,11 +12,11 @@
    above a 768px-wide screen. Source is 466x128 (2x) off the 751px master.
    Growing this eats the screen-1 spacer - see the budget in screens.css. */
 .s1-logo {
-  width: 233px;
-  height: 64px;
+  width: 466px;
+  height: 78px;
   margin: 0 auto;
-  background-image: url(../assets/logo/dpt-logo.png);
-  background-size: 233px 64px;
+  background-image: url(../assets/logo/dpt-wordmark.svg);
+  background-size: 466px 78px;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -51,7 +51,7 @@
   width: 32px;
   height: 32px;
   margin: 0 auto;
-  border: 2px solid #C7C7CC;        /* pending: recedes, so active reads first */
+  border: 2px solid #A9A9AE;        /* pending: recedes, so active reads first */
   border-radius: 16px;
   text-align: center;
 }
@@ -61,7 +61,7 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 30px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* iOS Caption, sentence case.  11px with 1px tracking was under the HIG's
@@ -73,7 +73,7 @@
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 .step-bar {
@@ -97,63 +97,72 @@
 .step-done .step-label { color: #7E001B; }
 .step-done .step-num { color: #FFFFFF; }
 
-/* --- headline block (124px total) --------------------------------------
+/* --- headline block ------------------------------------------------------
  *
- * This was a 72px condensed all-caps slab under a full-bleed hairline, which
- * echoed the printed wordmark but is the least native thing iOS could put on
- * a screen.  The HIG's typography guidance is explicit: minimise the number of
- * typefaces, prefer Regular/Medium/Semibold/Bold, and build hierarchy from
- * weight, size and colour rather than from decoration.
+ * The display voice: heavy, tight, all caps.  This is the brand talking, and
+ * at a trade-show booth it has about three seconds to do it from two metres
+ * away, so it is deliberately loud.
  *
- * So the block is now a standard iOS title stack - a secondary-label kicker,
- * a Large Title, and a footnote subhead - set in the system face at kiosk
- * scale.  Brand voice is carried by the burgundy and by the real logo above
- * it, which is where a brand belongs; it does not need the type to shout too.
+ * It is set in Libre Franklin 900 - the SAME face and weight as the supplied
+ * wordmark artwork, self-hosted so it renders identically everywhere (see
+ * css/fonts.css for why that matters).  The previous stack asked for
+ * Helvetica Neue's condensed cuts by PostScript name and fell through to
+ * plain Roboto on Fire OS, which is neither condensed nor industrial.
  *
- *   26 (kicker) + 8 + 58 (large title) + 6 + 26 (subhead) = 124
+ * The HIG's advice to prefer sentence case is written for apps you read for
+ * minutes; this is signage you read for seconds, and the brand's own wordmark
+ * is set exactly this way.  Everything a visitor actually has to READ - the
+ * captions, the stage labels, the staff panel - stays in the system face.
+ *
+ *   30 (kicker) + 4 + 66 (title) + 34 (rule + label) = 134
  * ----------------------------------------------------------------------- */
 .headline { text-align: center; }
 
-/* Kicker: iOS Headline, secondary label, sentence case. */
 .h-small {
-  height: 26px;
-  line-height: 26px;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 0.1px;
-  color: #6C6C70;
+  height: 30px;
+  line-height: 30px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #1C1C1E;
 }
 
-/* Large Title.  iOS sets these tight and heavy; -0.8 tracking at this size is
-   the optical equivalent of SF's own -0.4 at 34pt. */
 .h-big {
-  height: 58px;
-  line-height: 58px;
-  margin-top: 8px;
-  font-size: 52px;
-  font-weight: 800;
-  letter-spacing: -0.8px;
+  height: 66px;
+  line-height: 66px;
+  margin-top: 4px;
+  font-size: 64px;
+  /* 900 is a real master on the variable font, not a synthesised weight. */
+  font-weight: 900;
+  letter-spacing: -1.5px;
   color: #7E001B;
 }
 
+/* The wordmark sets its tagline as letterspaced caps under a hairline.
+   Echoing that is what ties the screen to the printed brand. */
 .h-rule {
   position: relative;
-  height: 26px;
-  margin: 6px auto 0 auto;
+  height: 34px;
+  width: 672px;
+  margin: 0 auto;
 }
 
-/* The full-bleed hairline is gone: iOS groups with whitespace, not rules. */
-.rule-line { display: none; }
+.rule-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #1C1C1E;
+}
 
-/* Subhead under the title - iOS Subhead, secondary label. */
 .rule-text {
   display: block;
-  height: 26px;
-  line-height: 26px;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: #6C6C70;
+  padding-top: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3.5px;
+  color: #1C1C1E;
 }
 
 /* --- hair grid ---------------------------------------------------------
@@ -190,7 +199,7 @@
   flex: 0 0 326px;
   width: 326px;
   min-height: 104px;
-  margin: 0 20px 16px 0;
+  margin: 0 20px 20px 0;
 }
 
 .card-slot:nth-child(2n) { margin-right: 0; }
@@ -210,14 +219,14 @@
   border-radius: 20px;
   /* One soft shadow rather than a border: iOS separates a grouped cell from
      its ground with elevation and colour, not with an outline. */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 6px 16px rgba(0, 0, 0, 0.07);
 }
 
 /* burgundy tint wash - opacity fades in, background-color never animates */
 .card-wash {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: #F6EDEF;
+  background: #F4E6E9;
   border-radius: 20px;
   opacity: 0;
 }
@@ -226,7 +235,7 @@
 .card-ring {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  border: 2.5px solid #7E001B;
+  border: 4px solid #7E001B;
   border-radius: 20px;
   opacity: 0;
 }
@@ -271,17 +280,17 @@
   position: absolute;
   top: 50%;
   right: 16px;
-  width: 30px;
-  height: 30px;
-  margin-top: -15px;
-  border-radius: 15px;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  border-radius: 20px;
   background: #7E001B;
   opacity: 0;
   -webkit-transform: scale(0.4);
   transform: scale(0.4);
 }
 
-.card-check svg { margin: 8px 0 0 7px; }
+.card-check svg { margin: 12px 0 0 12px; }
 
 /* --- primary button ---------------------------------------------------- */
 .btn-wrap { text-align: center; }
@@ -292,7 +301,7 @@
   position: relative;
   display: block;
   width: 672px;                     /* 768 - 48 margins each side */
-  height: 74px;
+  height: 84px;
   margin: 0 auto;
   background: #7E001B;
   border-radius: 20px;
@@ -311,11 +320,11 @@
 
 .btn-label {
   position: relative;
-  font-size: 23px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
   color: #FFFFFF;
-  line-height: 74px;
+  line-height: 84px;
 }
 
 /* Centred on the button's height rather than pinned to a magic top offset. */
@@ -457,7 +466,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1.2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 .ad-card {
@@ -493,7 +502,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1.2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- rows --- */
@@ -520,7 +529,7 @@
   left: 20px;
   top: 43px;
   font-size: 12px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- magazines --- */
@@ -653,7 +662,7 @@
   line-height: 30px;
   text-align: center;
   font-size: 11px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- paused overlay shown to visitors --- */
@@ -693,7 +702,7 @@
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* Pressed feedback for every staff-panel control.  Opacity only - the one

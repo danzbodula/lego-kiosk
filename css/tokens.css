@@ -12,7 +12,8 @@
  *   Burgundy tint (wash)    #F6EDEF
  *   Charcoal (headlines)    #1C1C1E
  *   Slate (body text)       #48484A
- *   Gray (inactive)         #8E8E93
+ *   Secondary label         #6C6C70   iOS label-secondary; 4.69:1 on #F2F2F7
+ *   Gray (inactive marks)   #8E8E93   NON-TEXT only - 2.92:1, fails for text
  *   Divider / card border   #E5E5EA
  *   Card surface            #FFFFFF
  *   App background          #F2F2F7

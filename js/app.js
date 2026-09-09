@@ -97,15 +97,15 @@ var App = (function () {
 
     var title = document.createElement('div');
     title.className = 'attract-title';
-    title.appendChild(document.createTextNode('Build your minifigure'));
+    title.appendChild(document.createTextNode('BUILD YOUR MINIFIGURE'));
 
     var sub = document.createElement('div');
     sub.className = 'attract-sub';
-    sub.appendChild(document.createTextNode('Built by a robot, while you watch'));
+    sub.appendChild(document.createTextNode('BUILT BY A ROBOT, WHILE YOU WATCH'));
 
     var tap = document.createElement('div');
     tap.className = 'attract-tap';
-    tap.appendChild(document.createTextNode('Tap to start'));
+    tap.appendChild(document.createTextNode('TAP TO START'));
 
     /* Every style, laid out from the manifest so a ninth needs no code here.
        Answers "what can I get?" before anyone touches anything - which is the
@@ -195,7 +195,7 @@ var App = (function () {
     el.innerHTML = '';
     if (n < 5) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    el.appendChild(document.createTextNode(n + ' built today'));
+    el.appendChild(document.createTextNode(n + ' BUILT TODAY'));
   }
 
   function showAttract() {

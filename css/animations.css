@@ -52,10 +52,10 @@
   transition: transform 420ms cubic-bezier(0.34, 1.36, 0.64, 1);
 }
 
-.card.is-selected {
-  -webkit-transform: scale(1.03);
-  transform: scale(1.03);
-}
+/* No transform on selection.  scale(1.03) pushed the selected card 4.8px
+   outside the 48px content margin every other element aligns to, which read
+   as a rendering wobble rather than as emphasis.  The 4px ring and the wash
+   carry the state instead; .is-pressed below still scales. */
 
 /* .is-pressed is declared after .is-selected so a press always wins */
 .card.is-pressed {
