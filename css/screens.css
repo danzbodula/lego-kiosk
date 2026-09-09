@@ -43,7 +43,7 @@
 }
 
 /* 8pt rhythm between the header elements. */
-.s1-col .s1-logo   { margin-bottom: 18px; }   /* 32+78+18 = stepper at 128 */
+.s1-col .s1-logo   { margin-bottom: 34px; }   /* 32+62+34 = stepper at 128 */
 .s1-col .stepper   { margin-bottom: 32px; }
 .s1-col .headline  { margin-bottom: 28px; }
 .s1-col .btn-wrap  { margin-bottom: 16px; }

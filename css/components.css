@@ -12,11 +12,11 @@
    above a 768px-wide screen. Source is 466x128 (2x) off the 751px master.
    Growing this eats the screen-1 spacer - see the budget in screens.css. */
 .s1-logo {
-  width: 466px;
-  height: 78px;
+  width: 370px;
+  height: 62px;
   margin: 0 auto;
   background-image: url(../assets/logo/dpt-wordmark.svg);
-  background-size: 466px 78px;
+  background-size: 370px 62px;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -43,7 +43,7 @@
 
 .step {
   display: inline-block;
-  width: 64px;
+  width: 80px;
   vertical-align: top;
 }
 
@@ -78,7 +78,7 @@
 
 .step-bar {
   display: inline-block;
-  width: 64px;
+  width: 80px;
   height: 1px;
   margin-top: 16px;
   background: #E5E5EA;
