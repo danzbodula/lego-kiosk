@@ -83,13 +83,36 @@ var Tap = (function () {
     }
   }
 
+  /* Does this engine understand addEventListener's options object?  Safari 9
+     does not and treats the third argument as `useCapture`, which is harmless
+     - it just means the passive flag below is neither needed nor available. */
+  var supportsPassive = (function () {
+    var ok = false;
+    try {
+      var opts = Object.defineProperty({}, 'passive', {
+        get: function () { ok = true; return false; }
+      });
+      window.addEventListener('_probe', null, opts);
+      window.removeEventListener('_probe', null, opts);
+    } catch (e) { /* old engine: leave ok false */ }
+    return ok;
+  })();
+
   /* Kill rubber-band scrolling document-wide.  No screen in this app scrolls,
-     so every touchmove that reaches the document is unwanted. */
+     so every touchmove that reaches the document is unwanted.
+
+     Chromium (so: Silk on the Fire) registers touchmove on window, document
+     and body as PASSIVE by default, which makes preventDefault() a silent
+     no-op - the listener runs, returns, and the page rubber-bands anyway.
+     Passing {passive:false} is the only way to keep the right to cancel.
+     css/stage.css also sets overscroll-behavior:none, which handles this
+     without a listener at all; both are cheap and they cover each other. */
   function lockScrolling() {
     document.addEventListener('touchmove', function (e) {
       if (e.preventDefault) e.preventDefault();
-    }, false);
+    }, supportsPassive ? { passive: false } : false);
   }
 
-  return { bind: bind, lockScrolling: lockScrolling, hasTouch: hasTouch };
+  return { bind: bind, lockScrolling: lockScrolling, hasTouch: hasTouch,
+           supportsPassive: supportsPassive };
 })();

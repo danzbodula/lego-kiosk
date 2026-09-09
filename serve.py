@@ -154,7 +154,53 @@ def capture():
     return None, "no rpicam/libcamera tool found on this Pi"
 
 
+# --- caching policy ---------------------------------------------------------
+# Every asset URL the app builds carries ?v=<ASSET_VERSION> (see js/assets.js),
+# and bust.py bumps ASSET_VERSION whenever the art is rebuilt.  That makes a
+# versioned URL immutable by construction: its bytes cannot change without the
+# URL changing too.
+#
+# The server used to send no-store on *everything*, which was the right call
+# against Safari 9 in standalone mode - it has no reload button, so a stale
+# cache entry was unrecoverable without wiping the app.  The cost of that
+# blanket rule is that the tablet re-downloads all 4.4 MB of sprite sheets on
+# every single load, from a Pi Zero W, over wifi.  That is the reason the
+# turntable stalls: not the compositor, just bytes still in flight.
+#
+# So the rule is now narrower and keeps the same guarantee where it mattered:
+#   versioned URL  -> cache forever; the URL is the version
+#   everything else (HTML, the API, any unversioned request) -> no-store, and
+#                     conditional requests are still stripped, exactly as before
+IMMUTABLE_CACHE = "public, max-age=31536000, immutable"
+NO_STORE_CACHE = "no-store, no-cache, must-revalidate, max-age=0"
+
+
 class NoCacheHandler(SimpleHTTPRequestHandler):
+    # A cold load pulls ~40 files.  On HTTP/1.0 (the stdlib default) that is
+    # ~40 separate TCP connections, and over a wifi repeater the per-connection
+    # handshake latency dominates the transfer.  HTTP/1.1 keeps the connection
+    # open between requests.  It requires an accurate Content-Length on every
+    # response or the client hangs waiting for a body that never ends; every
+    # path in this handler sets one, and so does the base class.
+    protocol_version = "HTTP/1.1"
+
+    # Set per-request by send_head(); see _versioned() below.  Handler
+    # instances are reused across keep-alive requests, so every entry point
+    # resets this rather than trusting the previous request's value.
+    _immutable = False
+
+    def _versioned(self):
+        """True if this request is for a ?v=-stamped static asset."""
+        parts = self.path.split("?", 1)
+        if len(parts) != 2:
+            return False
+        path, query = parts
+        # HTML is never versioned by the app and must stay fresh, or a deploy
+        # would not be picked up until the cache expired - i.e. never.
+        if path.endswith((".html", "/")):
+            return False
+        return query == "v" or query.startswith("v=") or "&v=" in query or "?v=" in query
+
     def _json(self, code, obj):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
@@ -164,6 +210,7 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
+        self._immutable = False      # API replies are never cacheable
         if self.path.split("?")[0] != "/api/hair-choice":
             self.send_error(404)
             return
@@ -190,6 +237,9 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
         self._json(200, {"ok": True, "state": snap})
 
     def do_GET(self):
+        # Reset before the API branches below, which never reach send_head().
+        # Handler instances are reused across keep-alive requests.
+        self._immutable = False
         if self.path.split("?")[0] == "/api/robot":
             ok, msg = robot_reachable()
             self._json(200, {"enabled": ROBOT_ENABLED, "host": ROBOT_HOST,
@@ -220,22 +270,23 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.do_GET(self)
 
     def end_headers(self):
-        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
+        if self._immutable:
+            self.send_header("Cache-Control", IMMUTABLE_CACHE)
+        else:
+            self.send_header("Cache-Control", NO_STORE_CACHE)
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
         SimpleHTTPRequestHandler.end_headers(self)
 
-    def send_response(self, *args, **kwargs):
-        # drop the Last-Modified based 304s that Safari would otherwise honour
-        SimpleHTTPRequestHandler.send_response(self, *args, **kwargs)
-
     def send_head(self):
-        # never answer a conditional request with "not modified"
-        self.headers.replace_header("If-Modified-Since", "") if "If-Modified-Since" in self.headers else None
-        if "If-None-Match" in self.headers:
-            del self.headers["If-None-Match"]
-        if "If-Modified-Since" in self.headers:
-            del self.headers["If-Modified-Since"]
+        self._immutable = self._versioned()
+        if not self._immutable:
+            # Unversioned: never answer a conditional request with "not
+            # modified", so an unrecoverable stale entry stays impossible.
+            # Versioned requests keep theirs - a 304 there is the whole point.
+            for header in ("If-None-Match", "If-Modified-Since"):
+                if header in self.headers:
+                    del self.headers[header]
         return SimpleHTTPRequestHandler.send_head(self)
 
 

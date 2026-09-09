@@ -1,0 +1,75 @@
+/* ---------------------------------------------------------------------------
+ * stage.css  --  the scaled canvas, plus browser hygiene for Fire OS / Silk.
+ *
+ * #stage holds the fixed 768-wide design canvas.  js/fit.js writes its height
+ * and its transform; everything else about the app carries on believing it is
+ * running on a 768px iPad, because inside this box it is.  See js/fit.js for
+ * why the app is scaled as a whole rather than restated in media queries.
+ * ------------------------------------------------------------------------ */
+
+#stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 768px;
+  height: 1004px;            /* js/fit.js overwrites this from the viewport */
+  overflow: hidden;
+  background: #FAFAFA;
+
+  /* Scale about the top-left; fit.js translates the box into place itself. */
+  -webkit-transform-origin: 0 0;
+  transform-origin: 0 0;
+
+  /* Deliberately NOT promoted to its own layer - see the note in js/fit.js.
+     Pinning the canvas to a texture would soften every glyph inside it. */
+}
+
+/* ---------------------------------------------------------------------------
+ * Fire OS / Silk hygiene.
+ *
+ * The original reset targets Safari 9 on iOS.  Silk is Chromium, and needs a
+ * few different things said to it to stop the page behaving like a web page.
+ * ------------------------------------------------------------------------ */
+
+html, body {
+  /* The letterbox around the canvas, on the rare geometry that has one.
+     Same value as the app background, so the seam is invisible. */
+  background: #FAFAFA;
+
+  /* Chromium's answer to rubber-banding.  The touchmove handler in
+     fastclick.js covers older engines; this covers this one without needing
+     an event listener to fire at all. */
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+body {
+  /* Kills the double-tap-to-zoom delay on Chromium without any of FastClick's
+     synthetic-click machinery.  With this set, a tap dispatches immediately. */
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+
+  /* -apple-system resolves to nothing on Fire OS and the stack fell through to
+     Arial, which is not what the type was spaced against.  Roboto is the Fire
+     system face and is metrically much closer to San Francisco. */
+  font-family: -apple-system, "Helvetica Neue", Roboto, "Droid Sans",
+               Helvetica, Arial, sans-serif;
+}
+
+/* The condensed face the headlines ask for does not exist on Fire OS either.
+   Roboto Condensed does, and is the right substitute for a wide-tracked
+   all-caps headline; without it these lines set in plain Roboto and run wide. */
+.attract-title,
+.h-big,
+.err-title {
+  font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
+               "Helvetica Neue", "Roboto Condensed", Roboto,
+               -apple-system, Helvetica, Arial, sans-serif;
+}
+
+/* Nothing in the kiosk is selectable or draggable, on any engine. */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}

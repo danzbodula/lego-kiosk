@@ -20,7 +20,7 @@ var DPT_CONFIG = {
   // Bumped by bust.py. Appended to every image URL so a Safari cache entry
   // created before the no-store headers existed cannot keep serving a stale
   // frame - changing the URL is the one thing the cache cannot ignore.
-  ASSET_VERSION: '1788296166',
+  ASSET_VERSION: '1788979903',
 
   // Where the hair art comes from.  One word switches the whole app.
   //   'render'      assets/hair-render/  - rendered from the real LDraw part
@@ -34,6 +34,11 @@ var DPT_CONFIG = {
   // Escape hatch: swap every transition for a flat 150ms opacity fade.
   // Flip this on if the real A5 can't hold frame rate.
   REDUCED_MOTION: false,
+
+  // Pull every style's sprite sheets into the HTTP cache during idle time, so
+  // the first visitor of the day gets the same instant turntable as the
+  // twentieth.  See js/prefetch.js.  Set false to leave the network alone.
+  PREFETCH_ALL: true,
 
   // Layout A (2x4 grid) is the only layout.  B - hero plus swipeable chips -
   // was dropped: its hosts are not square, which the sprite-sheet turntable

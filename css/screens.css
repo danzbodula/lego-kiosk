@@ -70,9 +70,14 @@
   text-align: center;
 }
 
+/* The attract screen is the one place that positions against the full canvas
+   height rather than flowing in a flex column.  Its vertical positions are
+   therefore percentages of the original 1004px budget, so the idle loop stays
+   proportional when js/fit.js grows the canvas on a taller screen.  The
+   comment after each is the design-pixel value it replaces. */
 .attract-logo {
   position: absolute;
-  top: 150px;
+  top: 14.94%;             /* 150 / 1004 */
   left: 332px;
   width: 104px;
   height: 104px;
@@ -83,7 +88,7 @@
 
 .attract-stage {
   position: absolute;
-  top: 310px;
+  top: 30.88%;             /* 310 / 1004 */
   left: 234px;
   width: 300px;
   height: 300px;
@@ -91,7 +96,7 @@
 
 .attract-title {
   position: absolute;
-  top: 666px;
+  top: 66.33%;             /* 666 / 1004 */
   left: 0;
   right: 0;
   font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
@@ -104,7 +109,7 @@
 
 .attract-sub {
   position: absolute;
-  top: 714px;
+  top: 71.12%;             /* 714 / 1004 */
   left: 0;
   right: 0;
   font-size: 17px;
@@ -115,7 +120,7 @@
 
 .attract-tap {
   position: absolute;
-  top: 838px;
+  top: 83.47%;             /* 838 / 1004 */
   left: 0;
   right: 0;
   font-size: 22px;
@@ -533,7 +538,7 @@
  * ----------------------------------------------------------------------- */
 .attract-row {
   position: absolute;
-  top: 748px;
+  top: 74.50%;             /* 748 / 1004 */
   left: 0; right: 0;
   height: 76px;
 }
@@ -568,7 +573,7 @@
 
 .attract-count {
   position: absolute;
-  top: 920px;
+  top: 91.63%;             /* 920 / 1004 */
   left: 0; right: 0;
   text-align: center;
   font-size: 12px;

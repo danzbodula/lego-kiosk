@@ -1,0 +1,20 @@
+{
+  "name": "Build Your Minifigure — Diversified Printing Techniques",
+  "short_name": "Minifigure",
+  "description": "DPT trade-show kiosk: choose a hair style and watch the arm build your minifigure.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#FAFAFA",
+  "theme_color": "#FAFAFA",
+  "icons": [
+    {
+      "src": "assets/logo/apple-touch-icon.png?v=1788979903",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
