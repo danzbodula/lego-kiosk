@@ -80,6 +80,18 @@ var Debug = (function () {
     html.push('fps      ' + (fps || '--'));
     html.push('viewport ' + window.innerWidth + ' x ' + window.innerHeight +
               '   dpr ' + (window.devicePixelRatio || 1));
+    // What js/fit.js actually resolved to on this device.  scale 1.000 is the
+    // iPad it was drawn for; the Fire should read about 0.694.
+    if (window.Fit) {
+      var st = document.getElementById('stage');
+      html.push('fit      scale ' + Fit.scale().toFixed(3) +
+                '   canvas 768 x ' + (st ? parseInt(st.style.height, 10) || '?' : '?') +
+                ' design px');
+    }
+    if (window.Prefetch) {
+      var left = Prefetch.pending();
+      html.push('prefetch ' + (left ? left + ' sheets still queued' : 'all sheets warm'));
+    }
     html.push('layout   ' + DPT_CONFIG.LAYOUT +
               '   reduced-motion ' + (DPT_CONFIG.REDUCED_MOTION ? 'on' : 'off') +
               '   simulate ' + (DPT_CONFIG.SIMULATE_BUILD ? 'on' : 'off'));
