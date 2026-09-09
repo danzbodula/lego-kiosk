@@ -1,0 +1,55 @@
+/* ---------------------------------------------------------------------------
+ * fonts.css  --  the display face.
+ *
+ * Libre Franklin is the DPT brand typeface: the supplied wordmark artwork is
+ * Libre Franklin 900 (DIVERSIFIED) and 700 (PRINTING TECHNIQUES) converted to
+ * outlines.  Setting the headlines in the same face is the difference between
+ * looking like the brand and looking near it.
+ *
+ * It is self-hosted, and that is the point.  The previous stack asked for
+ * "HelveticaNeue-CondensedBlack" by PostScript name, then Roboto Condensed as
+ * a fallback.  Neither exists on every device: Fire OS has no Helvetica Neue
+ * cuts at all, so the headline silently fell through to plain Roboto Bold - a
+ * completely different width and colour from what anybody designing it saw.
+ * A self-hosted file means what renders here is what renders at the booth.
+ *
+ * One 28.6 KB variable file covers the whole 100-900 range, and it is served
+ * with the immutable cache headers (see serve.py), so it costs one request in
+ * the life of a deployment.
+ *
+ * Licence: SIL Open Font License 1.1 - redistribution with the app is
+ * explicitly permitted.  Keep this notice with the file.
+ * ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: "Libre Franklin";
+  src: url(../assets/fonts/libre-franklin-latin-var.woff2) format("woff2");
+  font-weight: 100 900;              /* variable: the whole axis in one file */
+  font-style: normal;
+  font-display: swap;                /* never block the first paint on a font */
+}
+
+/* ---------------------------------------------------------------------------
+ * The display voice.
+ *
+ * Heavy, tightly-set, all-caps industrial grotesque - this is the brand's
+ * voice and it is deliberately loud.  It is used ONLY for display: headlines,
+ * the percentage, the primary buttons, the attract wordmark.  Body copy,
+ * captions and anything a visitor has to read a sentence of stays in the
+ * system face, which is what the HIG asks for and what stays legible small.
+ * ------------------------------------------------------------------------ */
+.h-small,
+.h-big,
+.rule-text,
+.attract-title,
+.attract-tap,
+.err-title,
+.build-pct,
+.done-name,
+.btn-label,
+.card-name,
+.step-label,
+.build-chip-name,
+.ad-pause-title {
+  font-family: "Libre Franklin", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}

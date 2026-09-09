@@ -12,11 +12,11 @@
    above a 768px-wide screen. Source is 466x128 (2x) off the 751px master.
    Growing this eats the screen-1 spacer - see the budget in screens.css. */
 .s1-logo {
-  width: 233px;
-  height: 64px;
+  width: 466px;
+  height: 78px;
   margin: 0 auto;
-  background-image: url(../assets/logo/dpt-logo.png);
-  background-size: 233px 64px;
+  background-image: url(../assets/logo/dpt-wordmark.svg);
+  background-size: 466px 78px;
   background-repeat: no-repeat;
   background-position: center;
 }
@@ -51,26 +51,29 @@
   width: 32px;
   height: 32px;
   margin: 0 auto;
-  border: 2px solid #C7C7CC;        /* pending: recedes, so active reads first */
+  border: 2px solid #A9A9AE;        /* pending: recedes, so active reads first */
   border-radius: 16px;
   text-align: center;
 }
 
 .step-num {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 28px;
-  color: #8E8E93;
+  line-height: 30px;
+  color: #6C6C70;
 }
 
+/* iOS Caption, sentence case.  11px with 1px tracking was under the HIG's
+   11pt floor once the canvas is scaled to 0.69 on the tablet - it rendered at
+   about 8pt, which is unreadable at booth distance. */
 .step-label {
   margin-top: 8px;
-  white-space: nowrap;              /* wrapping here would break the 56px budget */
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #8E8E93;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #6C6C70;
 }
 
 .step-bar {
@@ -94,44 +97,49 @@
 .step-done .step-label { color: #7E001B; }
 .step-done .step-num { color: #FFFFFF; }
 
-/* --- headline block (140px total) --------------------------------------
+/* --- headline block ------------------------------------------------------
  *
- * DISPLAY STACK.  The DPT wordmark is a very heavy, very tightly set
- * industrial grotesque.  San Francisco is far too humanist and too wide to
- * carry that voice, but iOS ships Helvetica Neue's condensed cuts and they
- * are addressable by PostScript name - so we ask for those first and fall
- * back to -apple-system at 800 anywhere they are missing (a desktop browser).
- * Do not "tidy" the PostScript names away; they are what makes the headline
- * look like the logo on the actual device.
+ * The display voice: heavy, tight, all caps.  This is the brand talking, and
+ * at a trade-show booth it has about three seconds to do it from two metres
+ * away, so it is deliberately loud.
  *
- *   30 (BUILD YOUR) + 76 (MINIFIGURE) + 34 (rule + label) = 140
+ * It is set in Libre Franklin 900 - the SAME face and weight as the supplied
+ * wordmark artwork, self-hosted so it renders identically everywhere (see
+ * css/fonts.css for why that matters).  The previous stack asked for
+ * Helvetica Neue's condensed cuts by PostScript name and fell through to
+ * plain Roboto on Fire OS, which is neither condensed nor industrial.
+ *
+ * The HIG's advice to prefer sentence case is written for apps you read for
+ * minutes; this is signage you read for seconds, and the brand's own wordmark
+ * is set exactly this way.  Everything a visitor actually has to READ - the
+ * captions, the stage labels, the staff panel - stays in the system face.
+ *
+ *   30 (kicker) + 4 + 66 (title) + 34 (rule + label) = 134
  * ----------------------------------------------------------------------- */
-.headline { height: 140px; text-align: center; }
+.headline { text-align: center; }
 
 .h-small {
   height: 30px;
   line-height: 30px;
-  font-family: "HelveticaNeue-CondensedBold", "Helvetica Neue",
-               -apple-system, Helvetica, Arial, sans-serif;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: #000000;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #1C1C1E;
 }
 
 .h-big {
-  height: 76px;
-  line-height: 76px;
-  font-family: "HelveticaNeue-CondensedBlack", "HelveticaNeue-CondensedBold",
-               "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
-  font-size: 72px;
-  font-weight: 800;
+  height: 66px;
+  line-height: 66px;
+  margin-top: 4px;
+  font-size: 64px;
+  /* 900 is a real master on the variable font, not a synthesised weight. */
+  font-weight: 900;
   letter-spacing: -1.5px;
   color: #7E001B;
 }
 
-/* The logo sets its tagline as letterspaced caps under a full-width hairline.
-   Echoing that reads far more like the brand than rules either side. */
+/* The wordmark sets its tagline as letterspaced caps under a hairline.
+   Echoing that is what ties the screen to the printed brand. */
 .h-rule {
   position: relative;
   height: 34px;
@@ -145,7 +153,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: #000000;
+  background: #1C1C1E;
 }
 
 .rule-text {
@@ -154,14 +162,32 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 3.5px;
-  color: #000000;
+  color: #1C1C1E;
 }
 
-/* --- hair grid --------------------------------------------------------- */
-/* inline-block, not grid or flex-gap: neither exists on Safari 9 */
+/* --- hair grid ---------------------------------------------------------
+ *
+ * The grid is the screen's flexible element.  js/fit.js gives the canvas the
+ * tablet's real proportions, which on the Fire HD 8 is ~1229 design px tall
+ * against the 1004 this was drawn for; previously all 225 of those extra
+ * pixels pooled into one dead spacer above the button, which is exactly the
+ * "big blank space towards the bottom" this fixes.
+ *
+ * Now the grid takes the slack instead.  align-content:stretch divides the
+ * container height equally between the four wrapped lines and each card fills
+ * its line, so a taller canvas produces bigger, more tappable cards rather
+ * than a hole.  On a 1004 canvas the rows settle back to ~112px, which is
+ * where they were drawn - so the iPad is unchanged.
+ * ----------------------------------------------------------------------- */
 .hair-grid {
   width: 672px;
-  margin: 0 auto -16px auto;
+  margin: 0 auto;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-align-content: stretch;
+  align-content: stretch;
   font-size: 0;
 }
 
@@ -169,31 +195,39 @@
    gets translateZ(0) only while that scale is running (see animations.css), so
    we never hold eight composited layers at once on a 512MB device. */
 .card-slot {
-  display: inline-block;
+  -webkit-flex: 0 0 326px;
+  flex: 0 0 326px;
   width: 326px;
-  height: 108px;
-  margin: 0 20px 16px 0;
-  vertical-align: top;
+  min-height: 104px;
+  margin: 0 20px 20px 0;
 }
 
 .card-slot:nth-child(2n) { margin-right: 0; }
 
+/* The last row carries no gutter, so the grid's box is exactly its content. */
+.card-slot:nth-last-child(-n+2) { margin-bottom: 0; }
+
+/* An iOS inset-grouped list row: white surface on the grouped ground, a
+   continuous-feeling radius, and a hairline instead of a drawn border.  The
+   card fills its slot, so its height comes from the grid above. */
 .card {
   position: relative;
-  width: 326px;
-  height: 108px;
+  width: 100%;
+  height: 100%;
+  min-height: 104px;
   background: #FFFFFF;
-  border: 1px solid #E5E5EA;
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  /* One soft shadow rather than a border: iOS separates a grouped cell from
+     its ground with elevation and colour, not with an outline. */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 6px 16px rgba(0, 0, 0, 0.07);
 }
 
 /* burgundy tint wash - opacity fades in, background-color never animates */
 .card-wash {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: #F6EDEF;
-  border-radius: 13px;
+  background: #F4E6E9;
+  border-radius: 20px;
   opacity: 0;
 }
 
@@ -201,64 +235,78 @@
 .card-ring {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  border: 2px solid #7E001B;
-  border-radius: 14px;
+  border: 4px solid #7E001B;
+  border-radius: 20px;
   opacity: 0;
 }
 
+/* Centred on the card's own height so the row still reads correctly however
+   tall the grid makes it. */
 .card-thumb {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 88px;
-  height: 88px;
+  top: 50%;
+  left: 14px;
+  width: 104px;
+  height: 104px;
+  margin-top: -52px;
   background-repeat: no-repeat;
   background-position: center center;
   background-size: contain;         /* replaces object-fit: contain */
 }
 
+/* iOS Headline weight, sentence case, optically centred against the thumb. */
 .card-name {
   position: absolute;
   top: 0;
-  left: 112px;
-  right: 44px;
-  height: 108px;
-  line-height: 108px;
-  font-size: 17px;
+  bottom: 0;
+  left: 132px;
+  right: 60px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  font-size: 21px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.2px;
   color: #1C1C1E;
   white-space: nowrap;
   overflow: hidden;
 }
 
+/* Trailing checkmark, vertically centred - the iOS selected-cell accessory.
+   Centred with a margin, not a translate, so the scale-in animation in
+   animations.css keeps working untouched. */
 .card-check {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 26px;
-  height: 26px;
-  border-radius: 13px;
+  top: 50%;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  border-radius: 20px;
   background: #7E001B;
   opacity: 0;
   -webkit-transform: scale(0.4);
   transform: scale(0.4);
 }
 
-.card-check svg { margin: 6px 0 0 5px; }
+.card-check svg { margin: 12px 0 0 12px; }
 
 /* --- primary button ---------------------------------------------------- */
 .btn-wrap { text-align: center; }
 
+/* iOS filled button: continuous radius, Headline weight, sentence case, and
+   no tracking - the wide letterspacing read as a web banner, not a control. */
 .btn-primary {
   position: relative;
   display: block;
   width: 672px;                     /* 768 - 48 margins each side */
-  height: 76px;
+  height: 84px;
   margin: 0 auto;
   background: #7E001B;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 2px 10px rgba(126, 0, 27, 0.22);
 }
 
 /* pressed shade - stacked, so background-color never animates */
@@ -266,23 +314,26 @@
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: #5E0014;
-  border-radius: 16px;
+  border-radius: 20px;
   opacity: 0;
 }
 
 .btn-label {
   position: relative;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   letter-spacing: 1.5px;
   color: #FFFFFF;
-  line-height: 76px;
+  line-height: 84px;
 }
 
+/* Centred on the button's height rather than pinned to a magic top offset. */
 .btn-chevron {
   position: absolute;
-  top: 27px;
-  right: 28px;
+  top: 50%;
+  right: 26px;
+  margin-top: -11px;
+  opacity: 0.75;
 }
 
 .btn-primary.is-disabled { opacity: 0.4; }
@@ -324,18 +375,20 @@
   margin-right: 7px;
 }
 
+/* iOS Footnote, secondary label. */
 .helper-text {
   display: inline-block;
   vertical-align: middle;
-  font-size: 15px;
-  color: #48484A;
+  font-size: 17px;
+  font-weight: 400;
+  color: #6C6C70;
 }
 
 /* --- staff panel ---------------------------------------------------------
  *
  * Reached by long-pressing the logo.  Deliberately reads as a different mode
  * from the visitor-facing screens - iOS grouped-list ground rather than the
- * app's #FAFAFA - while keeping the same burgundy, the same radii and the same
+ * app's #F2F2F7 - while keeping the same burgundy, the same radii and the same
  * type, so it is obviously the same product.
  *
  * Nothing animates but transform and opacity: the switch cross-fades two
@@ -413,7 +466,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1.2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 .ad-card {
@@ -449,7 +502,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1.2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- rows --- */
@@ -476,7 +529,7 @@
   left: 20px;
   top: 43px;
   font-size: 12px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- magazines --- */
@@ -609,14 +662,14 @@
   line-height: 30px;
   text-align: center;
   font-size: 11px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* --- paused overlay shown to visitors --- */
 .ad-pause {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: #FAFAFA;
+  background: #F2F2F7;
   z-index: 800;
   visibility: hidden;
   opacity: 0;
@@ -649,7 +702,7 @@
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 2px;
-  color: #8E8E93;
+  color: #6C6C70;
 }
 
 /* Pressed feedback for every staff-panel control.  Opacity only - the one

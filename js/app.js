@@ -41,16 +41,36 @@ var App = (function () {
     return [img];
   }
 
-  function preloadStyle(style) { warmFrames = preload(style, true); }
+  /* Warm an image and, where the browser supports it, force the DECODE too.
+     onload only means the bytes arrived; the decode happens lazily at first
+     paint, and for the completion figure that paint is the one moment it must
+     not stall.  decode() moves that work off the critical path. */
+  function warmImage(url) {
+    var img = new Image();
+    Debug.trackImage(url, img);
+    img.src = url;
+    if (typeof img.decode === 'function') {
+      // Rejects if the image is replaced or fails; neither is worth reporting.
+      img.decode()['catch'](function () {});
+    }
+    return img;
+  }
+
+  function preloadStyle(style) {
+    warmFrames = preload(style, true);
+    /* The completion screen's still is only ~13 KB and it is the first thing a
+       visitor sees when the build finishes, so warm it the moment a style is
+       picked rather than waiting for the build to start.  Cheap insurance
+       against a short build, or a build that is driven by real hardware and
+       finishes sooner than the simulation would. */
+    warmFrames.push(warmImage(Assets.still(style)));
+  }
 
   /* The still is tiny and must be ready before the completion screen springs
      in, so it is warmed alongside the sheet it stands in for. */
   function preloadHero(style) {
     heroFrames = preload(style, false);
-    var s = new Image();
-    Debug.trackImage(Assets.still(style), s);
-    s.src = Assets.still(style);
-    heroFrames.push(s);
+    heroFrames.push(warmImage(Assets.still(style)));
   }
 
   /* --- selection ---------------------------------------------------------- */
@@ -251,6 +271,7 @@ var App = (function () {
     var style = styleById(styleId);
     Screens.Screen2.build();
     Screens.Screen2.reset();
+    Screens.Screen2.setStyle(style);   // name what the arm is building
     Screens.Screen1.pauseSpin();
     preloadHero(style);           // eighteen seconds of build to fetch these in
     var from = screenEl(current), to = screenEl('build');

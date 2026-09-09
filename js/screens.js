@@ -217,7 +217,6 @@ var Screens = (function () {
       }
       var after = 190 + cards.length * 40;
       items.push({ el: document.getElementById('btn-wrap-select'), delay: after + 20 });
-      items.push({ el: document.getElementById('helper-select'),   delay: after + 55 });
       Anim.enter(items);
     }
 
@@ -229,8 +228,7 @@ var Screens = (function () {
         document.getElementById('logo-select'),
         document.getElementById('stepper-select'),
         document.getElementById('headline-select'),
-        document.getElementById('btn-wrap-select'),
-        document.getElementById('helper-select')
+        document.getElementById('btn-wrap-select')
       ];
       var i;
       for (i = 0; i < nodes.length; i++) {
@@ -318,7 +316,6 @@ var Screens = (function () {
 
       col.appendChild(el('div', 's1-spacer'));
       col.appendChild(document.getElementById('btn-wrap-select'));
-      col.appendChild(document.getElementById('helper-select'));
 
       if (oldCol && oldCol.parentNode) oldCol.parentNode.removeChild(oldCol);
       host.appendChild(col);
@@ -444,7 +441,6 @@ var Screens = (function () {
       for (i = 0; i < chips.length; i++) items.push({ el: chips[i].chip, delay: 290 + i * 40 });
       var after = 290 + chips.length * 40;
       items.push({ el: document.getElementById('btn-wrap-select'), delay: after + 20 });
-      items.push({ el: document.getElementById('helper-select'),   delay: after + 55 });
       Anim.enter(items);
     }
 
@@ -454,8 +450,7 @@ var Screens = (function () {
         document.getElementById('stepper-select'),
         document.getElementById('headline-select'),
         hero, heroName,
-        document.getElementById('btn-wrap-select'),
-        document.getElementById('helper-select')
+        document.getElementById('btn-wrap-select')
       ];
       var i;
       for (i = 0; i < nodes.length; i++) {
@@ -484,7 +479,7 @@ var Screens = (function () {
     '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">' +
     '  <!-- Rainbow Robotics cobot, drawn from the booth cell photo: light grey' +
     '       tubular links with dark joint shrouds, not a charcoal industrial arm.' +
-    '       Outlined so the light body still reads on the #FAFAFA ground. -->' +
+    '       Outlined so the light body still reads on the #F2F2F7 ground. -->' +
     '  <g stroke-linecap="round" stroke-linejoin="round" fill="none">' +
     '' +
     '    <!-- link outlines -->' +
@@ -599,14 +594,16 @@ var Screens = (function () {
     h.appendChild(b);
     // screens 2 and 3 carry the label device too, so the block still sums to
     // 140px and all three screens share one headline rhythm
-    var r = el('div', 'h-rule');
-    r.appendChild(el('span', 'rule-line'));
+    /* Only screens that HAVE a label get the rule.  Screen 2 passes none, and
+       used to get an empty 34px box under its title doing nothing. */
     if (label) {
+      var r = el('div', 'h-rule');
+      r.appendChild(el('span', 'rule-line'));
       var lt = el('span', 'rule-text');
       lt.appendChild(document.createTextNode(label));
       r.appendChild(lt);
+      h.appendChild(r);
     }
-    h.appendChild(r);
     return h;
   }
 
@@ -629,6 +626,7 @@ var Screens = (function () {
 
   var Screen2 = (function () {
     var host, ringFill, pctEl, remainEl, lineA, lineB, lineTop, errBox, errMsg, armWrap;
+    var chipThumb, chipName;         // the "what am I building" row
     var remainShown = null;          // seconds currently on screen
     var C = 0;                       // ring circumference
     var built = false;
@@ -643,11 +641,24 @@ var Screens = (function () {
       host.innerHTML = '';
       var col = el('div', 's2-col');
 
-      // no header mark on this screen - the big badge in the middle IS the mark.
-      // A spacer above as well as below centres the whole block optically.
-      col.appendChild(el('div', 's1-spacer'));
+      /* No header mark on this screen - the big badge in the middle IS the
+         mark.  But screens 1 and 3 both put 80px of mark above the stepper,
+         so this screen reserves the same height rather than letting its
+         stepper ride 76px higher: the progress indicator has to hold still
+         while the visitor watches it advance. */
+      col.appendChild(el('div', 's2-head-pad'));
       col.appendChild(buildStepper(['done', 'active', '']));
       col.appendChild(buildHeadline('BUILDING YOUR', 'MINIFIGURE'));
+
+      /* What is actually being built.  The screen never used to say, which
+         left the one question a waiting visitor has - "is it making MINE?" -
+         unanswered, and left a void where this now sits. */
+      var chip = el('div', 'build-chip');
+      chipThumb = el('div', 'build-chip-thumb');
+      chipName = el('div', 'build-chip-name');
+      chip.appendChild(chipThumb);
+      chip.appendChild(chipName);
+      col.appendChild(chip);
 
       var stage = el('div', 'build-stage');
       var R = 118, CX = 180;
@@ -699,7 +710,9 @@ var Screens = (function () {
 
       errBox = el('div', 'build-error');
       errBox.appendChild(el('div', 's1-badge'));
-      errBox.appendChild(el('div', 's1-spacer'));
+      // fixed, not flexible: two flexible spacers on this screen split the
+      // canvas slack into a void above the message and another below it
+      errBox.appendChild(el('div', 'err-gap'));
 
       var mark = el('div', 'err-mark');
       mark.innerHTML =
@@ -802,8 +815,17 @@ var Screens = (function () {
 
     function complete() { App.goDone(); }
 
+    /* Told by app.js when a build starts, so the chip can name the style. */
+    function setStyle(style) {
+      build();
+      if (!style || !chipThumb) return;
+      chipThumb.style.backgroundImage = 'url(' + Assets.thumb(style) + ')';
+      chipName.innerHTML = '';
+      chipName.appendChild(document.createTextNode(style.name + ' HAIR'));
+    }
+
     return {
-      build: build, setProgress: setProgress, reset: reset,
+      build: build, setProgress: setProgress, reset: reset, setStyle: setStyle,
       error: error, complete: complete, STAGES: STAGES
     };
   })();
@@ -885,19 +907,43 @@ var Screens = (function () {
       Anim.removeClass(pulse, 'is-pulsing');
       Anim.removeClass(figure, 'is-in');
       Anim.reflow(tickPath);
+
+      /* Spring the figure in HERE, during prepare, not in show().
+         show() runs in the push's completion callback - 380ms after the screen
+         starts sliding - and the spring itself is another 420ms, so the
+         minifigure was not fully on screen until ~800ms after the done screen
+         began arriving.  For most of that the visitor was looking at a
+         checkmark next to an empty box, which is the "blank for a second"
+         report.  The image itself was never the problem: it is warmed the
+         moment a style is picked (preloadStyle in app.js) and measurably
+         painted at t=0.
+         Reflowing between the remove and the add is what makes the spring run
+         rather than being coalesced away - so the figure animates in WHILE the
+         screen slides, and is simply there when it lands. */
+      Anim.reflow(figure);
+      Anim.addClass(figure, 'is-in');
       prepared = style.id;
     }
 
-    /* checkmark draws (500ms) -> one ring pulse -> the figure springs in */
+    /* The minifigure springs in FIRST, then the checkmark stamps it.
+     *
+     * This used to run the other way round - tick at 120ms, pulse at 640, and
+     * the figure not until 780 - which meant that after the 380ms screen
+     * transition the visitor spent well over a second looking at a checkmark
+     * floating beside an empty box.  It read as the image failing to load.
+     * It was never a loading problem (the still is warmed the moment a style
+     * is picked, see preloadStyle in app.js); it was the order.
+     *
+     * Showing the figure first is also the better story: you see YOUR
+     * minifigure, and then it gets approved. */
     function show(style) {
       if (prepared !== style.id) prepare(style);
 
-      window.setTimeout(function () { tickPath.setAttribute('stroke-dashoffset', '0'); }, 120);
-      window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 640);
-      window.setTimeout(function () {
-        Anim.addClass(figure, 'is-in');
-        spin.start();
-      }, 780);
+      // The figure is already in - prepare() brought it with the screen.
+      // All that is left is to set it turning and stamp it approved.
+      spin.start();
+      window.setTimeout(function () { tickPath.setAttribute('stroke-dashoffset', '0'); }, 60);
+      window.setTimeout(function () { Anim.addClass(pulse, 'is-pulsing'); }, 420);
     }
 
     function stop() { if (spin) spin.stop(); }
